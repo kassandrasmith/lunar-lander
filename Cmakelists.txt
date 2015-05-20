@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.8.4)
+project(lunar-lander)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+add_custom_target(lunar-lander COMMAND make -C ${lunar-lander_SOURCE_DIR} clean)
