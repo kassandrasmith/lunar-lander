@@ -43,7 +43,9 @@ EXTERN_FILES = ${UTILSROOT}/uartstdio.c
 # ----------------------------------------------------------------------------------------------------
 
 # Compiler prefix
+ifndef PREFIX
 PREFIX = arm-none-eabi
+endif
 
 # Compiler, linker, etc.
 CC = ${PREFIX}-gcc
@@ -92,10 +94,11 @@ LIBC_PATH=${shell ${CC} ${CFLAGS} -print-file-name=libc.a}
 LIBM_PATH=${shell ${CC} ${CFLAGS} -print-file-name=libm.a}
 
 # Files
-SRC = ${wildcard *.c} ${EXTERN_FILES}
+SRC = ${wildcard src/*.c} ${EXTERN_FILES}
 OBJS = ${SRC:.c=.o}
 
-
+OBJS_NAMES = $(notdir ${OBJS}) $(notdir ${EXOBJS})
+OUTDIR = out
 
 
 # ----------------------------------------------------------------------------------------------------
@@ -105,20 +108,21 @@ all: ${OBJS} ${FILENAME}.axf ${FILENAME}
 
 %.o: %.c ${EXTERN_FILES}
 	@echo Compiling ${<}...
-	@${CC} ${CFLAGS} ${<} -o ${@}
+	@${CC} ${CFLAGS} ${<} -o ${OUTDIR}/$(notdir ${@})
 
 ${FILENAME}.axf: ${OBJS}
 	@echo Linking...
-	@${LD} -T ${LINKER_FILE} ${LDFLAGS} -o ${FILENAME}.axf ${OBJS} ${DRIVOBJROOT}/libdriver.a ${LIBM_PATH} ${LIBC_PATH} ${LIB_GCC_PATH}
+	@echo
+	@${LD} -T ${LINKER_FILE} ${LDFLAGS} -o ${OUTDIR}/${FILENAME}.axf $(addprefix ${OUTDIR}/, ${OBJS_NAMES}) ${DRIVOBJROOT}/libdriver.a ${LIBM_PATH} ${LIBC_PATH} ${LIB_GCC_PATH}
 
 ${FILENAME}: ${FILENAME}.axf
 	@echo Copying...
-	@${OBJCOPY} ${CPFLAGS} ${FILENAME}.axf ${FILENAME}.bin
+	@${OBJCOPY} ${CPFLAGS} ${OUTDIR}/${FILENAME}.axf ${OUTDIR}/${FILENAME}.bin
 	@echo Dumping...
-	@${OBJDUMP} ${ODFLAGS} ${FILENAME}.axf > ${FILENAME}.lst
+	@${OBJDUMP} ${ODFLAGS} ${OUTDIR}/${FILENAME}.axf > ${OUTDIR}/${FILENAME}.lst
 
 upload: ${FILENAME}
-	lm4flash ${UPFLAGS} ${FILENAME}.bin
+	lm4flash ${UPFLAGS} ${OUTDIR}/${FILENAME}.bin
 
 clean:
 	rm -fv *.o *.d *.axf *.bin *.lst
