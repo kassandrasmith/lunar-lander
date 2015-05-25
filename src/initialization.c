@@ -1,10 +1,6 @@
-//
-// Created by Kassandra on 5/19/2015.
-//
-
-#include "initialization.h"
-//#include <stdint.h>           //import standard libraries
-//#include "tm4c123gh6pm.h"
+#include "../inc/initialization.h"
+#include <stdint.h>           //import standard libraries
+#include "inc/tm4c123gh6pm.h"
 
 //Initialize the Digital to Analog Converter (DAC) in order to produce sounds
 //We use a 6-bit R, 2R method DAC
