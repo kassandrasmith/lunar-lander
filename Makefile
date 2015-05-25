@@ -97,7 +97,7 @@ LIBM_PATH=${shell ${CC} ${CFLAGS} -print-file-name=libm.a}
 SRC = ${wildcard src/*.c} ${EXTERN_FILES}
 OBJS = ${SRC:.c=.o}
 
-OBJS_NAMES = $(notdir ${OBJS}) $(notdir ${EXOBJS})
+OBJS_NAMES = $(notdir ${OBJS})
 OUTDIR = out
 
 
