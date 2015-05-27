@@ -1,8 +1,11 @@
+<<<<<<< HEAD:src/main.c
 
+=======
+>>>>>>> origin/master:src/main.c
 #include <stdio.h>							//Standard libraries
 #include <stdint.h>							//Standard libraries
 #include <stdbool.h>                        //Standard libraries
-#include "tm4c123gh6pm.h"				    //inclusion of hardware library
+#include "inc/tm4c123gh6pm.h"				    //inclusion of hardware library
 #include "ST7735.h"							//different functions for the screen
 #include "PLL.h"							//Phase-Lock-Loop, used to calibrate the clock spees
 #include "initialization.h"		            //initialization sequences
@@ -56,7 +59,7 @@ int main(void) {
     }
 }
 
-void process_input (void){
+void process_input(void) {
     //d=vt
     //d=do+vo+1/2at^2
     if (!noFuel & jetButtonPressed) {

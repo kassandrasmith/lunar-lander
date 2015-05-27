@@ -1,30 +1,10 @@
-# Makefile
-#
-# ****************************************************************************************************
-# Author:
-#	Nipun Gunawardena
-#
-# Credits:
-#	Countless makefile tutorials; makedefs from TivaWare
-#	Mauro Scomparin's Stellaris Launchpad Makefile - https://github.com/scompo/stellaris-launchpad-template-gcc/blob/master/Makefile
-#
-# Requirements:
-#	None
-#
-# Description:
-#	Simple makefile for use with arm-none-eabi-gcc and Tiva Launchpad. Upload code to Launchpad with 
-#	'lm4flash timers.bin'
-# ****************************************************************************************************
-
 include Makedefs
 
 # ----------------------------------------------------------------------------------------------------
 # Filepaths
 # ----------------------------------------------------------------------------------------------------
-DRIVOBJROOT = ${ROOT}/driverlib/gcc
-UTILSROOT = ${ROOT}/utils
-
-
+DRIVOBJROOT = ${TWROOT}/driverlib/gcc
+UTILSROOT = ${TWROOT}/utils
 
 
 # ----------------------------------------------------------------------------------------------------
@@ -36,8 +16,6 @@ LINKER_FILE = ${FILENAME}.ld
 EXTERN_FILES = ${UTILSROOT}/uartstdio.c
 
 
-
-
 # ----------------------------------------------------------------------------------------------------
 # Definitions
 # ----------------------------------------------------------------------------------------------------
@@ -45,6 +23,10 @@ EXTERN_FILES = ${UTILSROOT}/uartstdio.c
 # Compiler prefix
 ifndef PREFIX
 PREFIX = arm-none-eabi
+endif
+
+ifndef OUTDIR
+OUTDIR = out
 endif
 
 # Compiler, linker, etc.
@@ -72,7 +54,7 @@ CFLAGS=-g                  \
        -pedantic           \
        -DPART_${PART}      \
        -Os                 \
-       -I${ROOT}           \
+       -I${TWROOT}           \
        -DTARGET_IS_BLIZZARD_RB1 \
 
 # Linker flags
@@ -98,7 +80,6 @@ SRC = ${wildcard src/*.c} ${EXTERN_FILES}
 OBJS = ${SRC:.c=.o}
 
 OBJS_NAMES = $(notdir ${OBJS})
-OUTDIR = out
 
 
 # ----------------------------------------------------------------------------------------------------

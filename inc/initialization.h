@@ -1,10 +1,7 @@
-//
-// Created by Kassandra on 5/19/2015.
-//
-
 #ifndef LUNAR_LANDER_INITIALIZATION_H
 #define LUNAR_LANDER_INITIALIZATION_H
 
+#include <stdint.h>
 
 //Initializes digital to analog converter for sounds
 void DAC_Init(void);
@@ -19,4 +16,4 @@ void SysTick_Init(uint32_t period);
 void ADC_Init(void);
 
 
-#endif //LUNAR_LANDER_INITIALIZATION_H
+#endif

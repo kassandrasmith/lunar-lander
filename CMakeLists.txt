@@ -1,7 +1,9 @@
-# cmake_minimum_required(VERSION <specify CMake version here>)
+cmake_minimum_required(VERSION 3.2)
 project(lunar_lander)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(TWROOT /Applications/arm/TivaWare)
+include(Cmakedefs)
 
-set(SOURCE_FILES main.cpp)
+include_directories(${TWROOT})
+set(SOURCE_FILES src/startup_gcc.c src/initialization.c)
 add_executable(lunar_lander ${SOURCE_FILES})
