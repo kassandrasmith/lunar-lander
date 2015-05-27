@@ -1,32 +1,3 @@
-//TODO move connections to readme
-/********Hardware I/O connections*******************
-*Slide pot:
-Slide pot pin 1 connected to ground
-Slide pot pin 2 connected to PE2/AIN1
-Slide pot pin 3 connected to +3.3V
-*Buttons:
-jet button connected to PE0
-left button connected to PE1
-right button connected to PE2
-*DAC:
-32*R resistor DAC bit 0 on PB0
-16*R resistor DAC bit 1 on PB1
-8*R resistor DAC bit 2 on PB2
-4*R resistor DAC bit 3 on PB3
-2*R resistor DAC bit 4 on PB4
-1*R resistor DAC bit 5 on PB5
-*ST7735 Screen connections:
-Backlight (pin 10) connected to +3.3 V
-MISO (pin 9) unconnected
-SCK (pin 8) connected to PA2 (SSI0Clk)
-MOSI (pin 7) connected to PA5 (SSI0Tx)
-TFT_CS (pin 6) connected to PA3 (SSI0Fss)
-CARD_CS (pin 5) unconnected
-Data/Command (pin 4) connected to PA6 (GPIO), high for data, low for command
-RESET (pin 3) connected to PA7 (GPIO)
-VCC (pin 2) connected to +3.3 V
-Gnd (pin 1) connected to ground
-*/
 
 #include <stdio.h>							//Standard libraries
 #include <stdint.h>							//Standard libraries
@@ -62,15 +33,6 @@ int16_t hvelocity;                  //negative value moves left, positive moves 
 uint16_t altitude=1;                //initialize to topmost of landscape-oriented screen
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 90;                 //0 points upwards
-
-//declare boolean
-bool jetButtonPressed = jetbutton == jetpushed;
-bool rightButtonPressed = rightbutton == rightpushed;
-bool leftButtonPressed = leftbutton == leftpushed;
-bool outOfTime = time >= 240;
-bool crashed = altitude < 0;
-bool tooFast = vvelocity>=50;
-bool noFuel = fuel==0;
 
 int main(void) {
 
@@ -122,6 +84,15 @@ void update (void){
 }
 
 void check (void){
+
+    //declare boolean
+    bool jetButtonPressed = jetbutton == jetpushed;
+    bool rightButtonPressed = rightbutton == rightpushed;
+    bool leftButtonPressed = leftbutton == leftpushed;
+    bool outOfTime = time >= 240;
+    bool crashed = altitude < 0;
+    bool tooFast = vvelocity>=50;
+    bool noFuel = fuel==0;
     //check altitude
     if (crashed & tooFast) {
         die();
