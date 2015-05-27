@@ -1,7 +1,3 @@
-<<<<<<< HEAD:src/main.c
-
-=======
->>>>>>> origin/master:src/main.c
 #include <stdio.h>							//Standard libraries
 #include <stdint.h>							//Standard libraries
 #include <stdbool.h>                        //Standard libraries
