@@ -106,4 +106,4 @@ upload: ${FILENAME}
 	lm4flash ${UPFLAGS} ${OUTDIR}/${FILENAME}.bin
 
 clean:
-	rm -fv *.o *.d *.axf *.bin *.lst
+	rm -rfv ${OUTDIR}/*.o ${OUTDIR}/*.d ${OUTDIR}/*.axf ${OUTDIR}/*.bin ${OUTDIR}/*.lst

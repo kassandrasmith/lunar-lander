@@ -1,10 +1,12 @@
 #include <stdio.h>							//Standard libraries
 #include <stdint.h>							//Standard libraries
 #include <stdbool.h>                        //Standard libraries
-#include "inc/tm4c123gh6pm.h"				    //inclusion of hardware library
-#include "ST7735.h"							//different functions for the screen
-#include "PLL.h"							//Phase-Lock-Loop, used to calibrate the clock spees
-#include "initialization.h"		            //initialization sequences
+#include <math.h>                           //Standard libraries
+#include "../inc/tm4c123gh6pm.h"				    //inclusion of hardware library
+#include "../inc/ST7735.h"							//different functions for the screen
+#include "../inc/PLL.h"							    //Phase-Lock-Loop, used to calibrate the clock spees
+#include "../inc/initialization.h"		            //initialization sequences
+#include "../inc/main.h"
 
 void DisableInterrupts(void); 		// Disable interrupts (HACK)may need to include for interrupts to work
 void EnableInterrupts(void);  		// Enable interrupts  (HACK)may need to include for interrupts to work
@@ -40,7 +42,7 @@ int main(void) {
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
     PortF_Init();
     ST7735_InitR(INITR_REDTAB);
-    SysTick_Init();                                             // 30 Hz game engine
+    SysTick_Init(8000000);                                             // 30 Hz game engine FIXME number that gets passed
     EnableInterrupts();                                         //end of initializations, enable interrupts
     //initial state for screen
     ST7735_FillScreen(0x000000);                                //fill screen with black
@@ -58,6 +60,11 @@ int main(void) {
 void process_input(void) {
     //d=vt
     //d=do+vo+1/2at^2
+    bool noFuel = fuel==0;
+    bool jetButtonPressed = jetbutton == jetpushed;
+    bool rightButtonPressed = rightbutton == rightpushed;
+    bool leftButtonPressed = leftbutton == leftpushed;
+
     if (!noFuel & jetButtonPressed) {
         vaccel = -0.811;    //negative accelaration forces lander opposite gravity
         fuel--;             //using fuel
@@ -78,20 +85,16 @@ void update (void){
     time++;
     //TODO Uncrap the physics
     vvelocity = (vvelocity + (vaccel * ttime));
-    hvelocity =  hvelocity*cosine(angle)*ttime;
-    altitude = (altitude + (vvelocity*sine(angle) * ttime) + (.5 * vaccel * (ttime ^ 2)));
+   hvelocity =  hvelocity*cos(angle)*ttime;
+   altitude = (altitude + (vvelocity*sin(angle) * ttime) + (.5 * vaccel * (ttime ^ 2)));
 }
-
+//"check" the things that will kill you
 void check (void){
 
     //declare boolean
-    bool jetButtonPressed = jetbutton == jetpushed;
-    bool rightButtonPressed = rightbutton == rightpushed;
-    bool leftButtonPressed = leftbutton == leftpushed;
     bool outOfTime = time >= 240;
     bool crashed = altitude < 0;
     bool tooFast = vvelocity>=50;
-    bool noFuel = fuel==0;
     //check altitude
     if (crashed & tooFast) {
         die();
@@ -135,9 +138,9 @@ void landed(void){
 }
 
 //TODO change math to use modulo
-void write_score (score){
+void write_score (uint16_t score){
     score= (score+(100*multiplier));
-    uint16 outScore=score;
+    uint16_t outScore=score;
     ST7735_SetCursor(1, 1); //Set cursor to top left
     ST7735_OutChar (score/1000);
     outScore=score/1000;
@@ -147,8 +150,8 @@ void write_score (score){
     outScore=score/10;
     ST7735_OutChar ((score-( outScore*10)));
 }
-void write_fuel (fuel){
-    uint16 outfuel=fuel;
+void write_fuel (uint16_t fuel){
+    uint16_t outfuel=fuel;
 
     ST7735_SetCursor(1, 30); ///TODO set cursor to write below time
     ST7735_OutChar (fuel/1000);
@@ -159,7 +162,7 @@ void write_fuel (fuel){
     outfuel=fuel/10;
     ST7735_OutChar ((fuel-( outfuel*10)));
 }
-void write_time (time){
+void write_time (uint16_t time){
     char min = time / 60;
     uint8_t sec = (time - min * 60);
     uint8_t seca = (sec / 10);

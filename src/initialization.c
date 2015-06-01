@@ -1,6 +1,6 @@
 #include "../inc/initialization.h"
 #include <stdint.h>           //import standard libraries
-#include "inc/tm4c123gh6pm.h"
+#include "../inc/tm4c123gh6pm.h"
 
 //Initialize the Digital to Analog Converter (DAC) in order to produce sounds
 //We use a 6-bit R, 2R method DAC
@@ -22,7 +22,7 @@ void DAC_Init(void) {
 //PORT F pin assignments:
 //PF0 and PF4 are switches;
 //PF3-1 are different LEDs
-void PORTF_Init(void) {
+void PortF_Init(void) {
     unsigned long volatile delay;
 
     //Port F initialization

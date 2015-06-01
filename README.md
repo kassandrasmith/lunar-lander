@@ -34,10 +34,10 @@ Gnd (pin 1) connected to ground
 
 ### Software
 
-Create a `Makedef` file and declare `TWROOT` to be the path to Tiva Ware, TI's useful bundle of resources and libraries for working with launchpad. You may also specify a compiler prefix in this file by defining `PREFIX`.
+Create a `Makedefs` file and declare `TWROOT` to be the path to Tiva Ware, TI's useful bundle of resources and libraries for working with launchpad. You may also specify a compiler prefix in this file by defining `PREFIX`.
 
 ```
-ROOT = /Applications/arm/TivaWare
+TWROOT = /Applications/arm/TivaWare
 ```
 
 Run `make; make upload;` to build and flash the code to a connected board.
