@@ -2,7 +2,7 @@
 #include <stdint.h>							//Standard libraries
 #include <stdbool.h>                        //Standard libraries
 #include <math.h>                           //Standard libraries
-#include "../inc/tm4c123gh6pm.h"				    //inclusion of hardware library
+#include "inc/tm4c123gh6pm.h"				    //inclusion of hardware library
 #include "../inc/ST7735.h"							//different functions for the screen
 #include "../inc/PLL.h"							    //Phase-Lock-Loop, used to calibrate the clock spees
 #include "../inc/initialization.h"		            //initialization sequences
