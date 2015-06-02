@@ -20,7 +20,6 @@ void Delay100ms(uint32_t count); 	    // time delay in 0.1 seconds
 #define rightbutton (GPIO_PORTE_DATA_R & 0x03)
 #define rightpushed 0x03
 
-
 //declare global variables
 uint16_t score;
 uint16_t time;
@@ -42,7 +41,7 @@ int main(void) {
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
     PortF_Init();
     ST7735_InitR(INITR_REDTAB);
-    SysTick_Init(8000000);                                             // 30 Hz game engine FIXME number that gets passed
+    SysTick_Init((80000000/30)-1);                              // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1 ;subtract one to get interrupts
     EnableInterrupts();                                         //end of initializations, enable interrupts
     //initial state for screen
     ST7735_FillScreen(0x000000);                                //fill screen with black
@@ -64,7 +63,6 @@ void process_input(void) {
     bool jetButtonPressed = jetbutton == jetpushed;
     bool rightButtonPressed = rightbutton == rightpushed;
     bool leftButtonPressed = leftbutton == leftpushed;
-
     if (!noFuel & jetButtonPressed) {
         vaccel = -0.811;    //negative accelaration forces lander opposite gravity
         fuel--;             //using fuel
@@ -80,7 +78,7 @@ void process_input(void) {
         angle++;
     }
 }
-
+//update location and time
 void update (void){
     time++;
     //TODO Uncrap the physics
