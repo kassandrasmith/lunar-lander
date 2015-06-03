@@ -95,6 +95,7 @@ void check (void){
     bool tooFast = vvelocity>=50;
     //check altitude
     if (crashed & tooFast) {
+        die(2);
 
     } //(TODO)replace altitude check with terrain value check once terrain is generated
     if (crashed & (!tooFast)) {
@@ -105,6 +106,7 @@ void check (void){
     }
     //check time
     if (outOfTime) {
+        die(1);
     }
     if (angle == -1) {
         angle = 179;
@@ -115,76 +117,72 @@ void check (void){
 }
 
 void render (void) {
-
-//ST7735_DrawBitmap(xposit, altitude,(!!!)lander, (!!!)x-size, (!!!)y-size ); //need to generate lander
-    //TODO draw the lander
-//TODO generate terrain
-}
-
-void die(void){
-}
-
-//TODO write a message for winning
-void landed(void){
-}
-
-//TODO change math to use modulo
-void write_score (uint16_t score){
-    score= (score+(100*multiplier));
-    uint16_t outScore=score;
-    ST7735_SetCursor(1, 1); //Set cursor to top left
-    ST7735_OutChar (score/1000);
-    outScore=score/1000;
-    ST7735_OutChar ((score-( outScore*1000))/100);
-    outScore=score/100;
-    ST7735_OutChar ((score-( outScore*100))/10);
-    outScore=score/10;
-    ST7735_OutChar ((score-( outScore*10)));
-}
-void write_fuel (uint16_t fuel){
-    uint16_t outfuel=fuel;
-
-    ST7735_SetCursor(1, 30); ///TODO set cursor to write below time
-    ST7735_OutChar (fuel/1000);
-    outfuel=fuel/1000;
-    ST7735_OutChar ((fuel-( outfuel*1000))/100);
-    outfuel=fuel/100;
-    ST7735_OutChar ((fuel-( outfuel*100))/10);
-    outfuel=fuel/10;
-    ST7735_OutChar ((fuel-( outfuel*10)));
-}
-void write_time (uint16_t time){
-    char min = time / 60;
-    uint8_t sec = (time - min * 60);
-    uint8_t seca = (sec / 10);
-    uint8_t secb = (sec - seca);
-    //outputs time value formatted min:sec
-    ST7735_SetCursor(1, 15); //TODO set cursor to write below score
-    ST7735_OutChar(min + 30); //convert min to the ascii value
-    ST7735_OutChar(0x3A); // ":" in ASCII
-    st7735_OutChar(seca + 30);
-    ST7735_OutChar(secb + 30);
-}
-        die(2);
-        die(1);
     ST7735_SetCursor(1, 1); //Set cursor to top left
     write_score(score);
     ST7735_SetCursor(1, 15); //FIXME set cursor to write below score
     write_time(time);
     ST7735_SetCursor(1, 30); ///FIXME set cursor to write below time
     write_fuel(fuel);
+
+//ST7735_DrawBitmap(xposit, altitude,(!!!)lander, (!!!)x-size, (!!!)y-size ); //need to generate lander
+    //TODO draw the lander
+//TODO generate terrain
+}
+
 //Output some sort of death message
+void die(deathtype) {
     ST7735_SetCursor(40, 1); ///FIXME set cursors
     ST7735_OutString("You died!");
-    if (deathtype==1){
-        ST7735_SetCursor(40, 40); /
+    if (deathtype == 1) {
+        ST7735_SetCursor(40, 40);
         ST7735_OutString("Out of time!");
     }
-    if (deathtype==2){
+    if (deathtype == 2) {
         ST7735_SetCursor(40, 40);
         ST7735_OutString("Lost 20 fuel units.");
-        fuel-20;
+        fuel - 20;
         ST7735_SetCursor(40, 60);
         ST7735_OutString("Fuel left:");
         ST7735_SetCursor(40, 80);
         write_fuel(fuel);
+    }
+}
+
+//TODO write a message for winning
+    void landed(void) {
+    }
+
+//TODO change math to use modulo
+    void write_score(uint16_t score) {
+        score = (score + (100 * multiplier));
+        uint16_t outScore = score;
+        ST7735_OutChar(score / 1000);
+        outScore = score / 1000;
+        ST7735_OutChar((score - (outScore * 1000)) / 100);
+        outScore = score / 100;
+        ST7735_OutChar((score - (outScore * 100)) / 10);
+        outScore = score / 10;
+        ST7735_OutChar((score - (outScore * 10)));
+    }
+    void write_fuel(uint16_t fuel) {
+        uint16_t outfuel = fuel;
+        ST7735_OutChar(fuel / 1000);
+        outfuel = fuel / 1000;
+        ST7735_OutChar((fuel - (outfuel * 1000)) / 100);
+        outfuel = fuel / 100;
+        ST7735_OutChar((fuel - (outfuel * 100)) / 10);
+        outfuel = fuel / 10;
+        ST7735_OutChar((fuel - (outfuel * 10)));
+    }
+    void write_time(uint16_t time) {
+        char min = time / 60;
+        uint8_t sec = (time - min * 60);
+        uint8_t seca = (sec / 10);
+        uint8_t secb = (sec - seca);
+        //outputs time value formatted min:sec
+        ST7735_OutChar(min + 30); //convert min to the ascii value
+        ST7735_OutChar(0x3A); // ":" in ASCII
+        st7735_OutChar(seca + 30);
+        ST7735_OutChar(secb + 30);
+
+    }
