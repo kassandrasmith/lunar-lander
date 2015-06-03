@@ -95,7 +95,6 @@ void check (void){
     bool tooFast = vvelocity>=50;
     //check altitude
     if (crashed & tooFast) {
-        die();
 
     } //(TODO)replace altitude check with terrain value check once terrain is generated
     if (crashed & (!tooFast)) {
@@ -106,7 +105,6 @@ void check (void){
     }
     //check time
     if (outOfTime) {
-        die();
     }
     if (angle == -1) {
         angle = 179;
@@ -117,18 +115,13 @@ void check (void){
 }
 
 void render (void) {
-    write_time(time);
-    write_score(score);
-    write_fuel(fuel);
 
 //ST7735_DrawBitmap(xposit, altitude,(!!!)lander, (!!!)x-size, (!!!)y-size ); //need to generate lander
     //TODO draw the lander
 //TODO generate terrain
 }
 
-//TODO write death function
 void die(void){
-    //Output some sort of death message
 }
 
 //TODO write a message for winning
@@ -172,3 +165,26 @@ void write_time (uint16_t time){
     st7735_OutChar(seca + 30);
     ST7735_OutChar(secb + 30);
 }
+        die(2);
+        die(1);
+    ST7735_SetCursor(1, 1); //Set cursor to top left
+    write_score(score);
+    ST7735_SetCursor(1, 15); //FIXME set cursor to write below score
+    write_time(time);
+    ST7735_SetCursor(1, 30); ///FIXME set cursor to write below time
+    write_fuel(fuel);
+//Output some sort of death message
+    ST7735_SetCursor(40, 1); ///FIXME set cursors
+    ST7735_OutString("You died!");
+    if (deathtype==1){
+        ST7735_SetCursor(40, 40); /
+        ST7735_OutString("Out of time!");
+    }
+    if (deathtype==2){
+        ST7735_SetCursor(40, 40);
+        ST7735_OutString("Lost 20 fuel units.");
+        fuel-20;
+        ST7735_SetCursor(40, 60);
+        ST7735_OutString("Fuel left:");
+        ST7735_SetCursor(40, 80);
+        write_fuel(fuel);
