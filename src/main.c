@@ -57,8 +57,6 @@ int main(void) {
 }
 
 void process_input(void) {
-    //d=vt
-    //d=do+vo+1/2at^2
     bool noFuel = fuel==0;
     bool jetButtonPressed = jetbutton == jetpushed;
     bool rightButtonPressed = rightbutton == rightpushed;
@@ -99,7 +97,7 @@ void check (void){
 
     } //(TODO)replace altitude check with terrain value check once terrain is generated
     if (crashed & (!tooFast)) {
-        landed();
+        land();
     }
     if (altitude >= 128) {
         altitude = 128;     //TODO figure out how we want to handle the lander at the edges of the screen
@@ -136,6 +134,9 @@ void die(deathtype) {
     if (deathtype == 1) {
         ST7735_SetCursor(40, 40);
         ST7735_OutString("Out of time!");
+        ST7735_OutString("Final score:");
+        write_score(score);
+        //TODO write a slight delay
     }
     if (deathtype == 2) {
         ST7735_SetCursor(40, 40);
@@ -145,11 +146,23 @@ void die(deathtype) {
         ST7735_OutString("Fuel left:");
         ST7735_SetCursor(40, 80);
         write_fuel(fuel);
+        ST7735_SetCursor(40, 100);
+        ST7735_OutString("Current score:");
+        write_score(score);
+        //TODO write a slight delay
     }
 }
 
 //TODO write a message for winning
-    void landed(void) {
+    void land(void) {
+    ST7735_SetCursor(40, 1); ///FIXME set cursors
+    ST7735_OutString("You landed!");
+    if(fuel>0){
+        ST7735_SetCursor(40, 40);
+        ST7735_OutString("Fuel remaining:");
+        write_fuel(fuel);
+        //TODO write a slight delay
+    }
     }
 
 //TODO change math to use modulo
