@@ -8,8 +8,8 @@
 #include "../inc/initialization.h"		            //initialization sequences
 #include "../inc/main.h"
 
-void DisableInterrupts(void); 		// Disable interrupts (HACK)may need to include for interrupts to work
-void EnableInterrupts(void);  		// Enable interrupts  (HACK)may need to include for interrupts to work
+void DisableInterrupts();        // Disable interrupts (HACK)may need to include for interrupts to work
+void EnableInterrupts();        // Enable interrupts  (HACK)may need to include for interrupts to work
 void Delay100ms(uint32_t count); 	    // time delay in 0.1 seconds
 
 //define buttons
@@ -19,6 +19,14 @@ void Delay100ms(uint32_t count); 	    // time delay in 0.1 seconds
 #define leftpushed 0x02
 #define rightbutton (GPIO_PORTE_DATA_R & 0x03)
 #define rightpushed 0x03
+
+void EnableInterrupts(void) {
+    __asm  ("    CPSIE  I\n"
+            "    BX     LR\n");
+}
+
+void DisableInterrupts(void) {
+}
 
 //declare global variables
 uint16_t score;
@@ -169,6 +177,6 @@ void write_time (uint16_t time){
     ST7735_SetCursor(1, 15); //TODO set cursor to write below score
     ST7735_OutChar(min + 30); //convert min to the ascii value
     ST7735_OutChar(0x3A); // ":" in ASCII
-    st7735_OutChar(seca + 30);
+    ST7735_OutChar(seca + 30);
     ST7735_OutChar(secb + 30);
 }

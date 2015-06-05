@@ -22,16 +22,15 @@
 // the file described above.
 //    16-bit color, 128 wide by 160 high LCD
 // Daniel Valvano
-// September 12, 2013
+// March 30, 2015
 // Augmented 7/17/2014 to have a simple graphics facility
 // Tested with LaunchPadDLL.dll simulator 9/2/2014
-// Last Modified: 3/6/2015 
 
 /* This example accompanies the book
-   "Embedded Systems: Real Time Interfacing to Arm Cortex M Microcontrollers",
+   "Embedded Systems: Real Time Interfacing to ARM Cortex M Microcontrollers",
    ISBN: 978-1463590154, Jonathan Valvano, copyright (c) 2014
 
- Copyright 2014 by Jonathan W. Valvano, valvano@mail.utexas.edu
+ Copyright 2015 by Jonathan W. Valvano, valvano@mail.utexas.edu
     You may use, edit, run or distribute this file
     as long as the above copyright notice remains
  THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
@@ -43,6 +42,9 @@
  http://users.ece.utexas.edu/~valvano/
  */
 
+// hardware connections
+// **********ST7735 TFT and SDC*******************
+// ST7735
 // Backlight (pin 10) connected to +3.3 V
 // MISO (pin 9) unconnected
 // SCK (pin 8) connected to PA2 (SSI0Clk)
@@ -53,6 +55,39 @@
 // RESET (pin 3) connected to PA7 (GPIO)
 // VCC (pin 2) connected to +3.3 V
 // Gnd (pin 1) connected to ground
+
+// **********wide.hk ST7735R*******************
+// Silkscreen Label (SDC side up; LCD side down) - Connection
+// VCC  - +3.3 V
+// GND  - Ground
+// !SCL - PA2 Sclk SPI clock from microcontroller to TFT or SDC
+// !SDA - PA5 MOSI SPI data from microcontroller to TFT or SDC
+// DC   - PA6 TFT data/command
+// RES  - PA7 TFT reset
+// CS   - PA3 TFT_CS, active low to enable TFT
+// *CS  - (NC) SDC_CS, active low to enable SDC
+// MISO - (NC) MISO SPI data from SDC to microcontroller
+// SDA  � (NC) I2C data for ADXL345 accelerometer
+// SCL  � (NC) I2C clock for ADXL345 accelerometer
+// SDO  � (NC) I2C alternate address for ADXL345 accelerometer
+// Backlight + - Light, backlight connected to +3.3 V
+
+// **********ADXL335 3-axis ST7735R*******************
+// Silkscreen Label (SDC side up; LCD side down) - Connection
+// VCC  - +3.3 V
+// GND  - Ground
+// !SCL - PA2 Sclk SPI clock from microcontroller to TFT or SDC
+// !SDA - PA5 MOSI SPI data from microcontroller to TFT or SDC
+// DC   - PA6 TFT data/command
+// RES  - PA7 TFT reset
+// CS   - PA3 TFT_CS, active low to enable TFT
+// *CS  - (NC) SDC_CS, active low to enable SDC
+// MISO - (NC) MISO SPI data from SDC to microcontroller
+// X� (NC) analog input X-axis from ADXL335 accelerometer
+// Y� (NC) analog input Y-axis from ADXL335 accelerometer
+// Z� (NC) analog input Z-axis from ADXL335 accelerometer
+// Backlight + - Light, backlight connected to +3.3 V
+
 #include <stdio.h>
 #include <stdint.h>
 #include "../inc/ST7735.h"
@@ -60,7 +95,7 @@
 
 // 16 rows (0 to 15) and 21 characters (0 to 20)
 // Requires (11 + size*size*6*8) bytes of transmission for each character
-uint32_t StX=0; // position along the horizonal axis 0 to 20 
+uint32_t StX = 0; // position along the horizonal axis 0 to 20
 uint32_t StY=0; // position along the vertical axis 0 to 15
 uint16_t StTextColor = ST7735_YELLOW;
 
@@ -473,11 +508,21 @@ static int16_t _height = ST7735_TFTHEIGHT;
 // and then adds the data to the transmit FIFO.
 // NOTE: These functions will crash or stall indefinitely if
 // the SSI0 module is not initialized and enabled.
-void writecommand(uint8_t c);
+void static writecommand(uint8_t c) {
+  // wait until SSI0 not busy/transmit FIFO empty
+  while ((SSI0_SR_R & SSI_SR_BSY) == SSI_SR_BSY) { };
+  DC = DC_COMMAND;
+  SSI0_DR_R = c;                        // data out
+  // wait until SSI0 not busy/transmit FIFO empty
+  while ((SSI0_SR_R & SSI_SR_BSY) == SSI_SR_BSY) { };
+}
 
 
-void writedata(uint8_t c);
-
+void static writedata(uint8_t c) {
+  while ((SSI0_SR_R & SSI_SR_TNF) == 0) { };   // wait until transmit FIFO not full
+  DC = DC_DATA;
+  SSI0_DR_R = c;                        // data out
+}
 // Subroutine to wait 1 msec
 // Inputs: None
 // Outputs: None
@@ -486,7 +531,7 @@ void Delay1ms(uint32_t n){uint32_t volatile time;
   while(n){
     time = 72724*2/91;  // 1msec, tuned at 80 MHz
     while(time){
-	  	time--;
+      time--;
     }
     n--;
   }
@@ -882,7 +927,7 @@ void ST7735_FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
   setAddrWindow(x, y, x+w-1, y+h-1);
 
   for(y=h; y>0; y--) {
-      for(x=w; x>0; x--) {
+    for (x = w; x > 0; x--) {
       writedata(hi);
       writedata(lo);
     }
@@ -1081,7 +1126,7 @@ void ST7735_DrawChar(int16_t x, int16_t y, char c, int16_t textColor, int16_t bg
   }
 }
 //------------ST7735_DrawString------------
-// String draw function.  
+// String draw function.
 // 16 rows (0 to 15) and 21 characters (0 to 20)
 // Requires (11 + size*size*6*8) bytes of transmission for each character
 // Input: x         columns from the left edge (0 to 20)
@@ -1238,7 +1283,7 @@ int32_t Yrange; //YrangeDiv2;
 
 // *************** ST7735_PlotClear ********************
 // Clear the graphics buffer, set X coordinate to 0
-// This routine clears the display 
+// This routine clears the display
 // Inputs: ymin and ymax are range of the plot
 // Outputs: none
 void ST7735_PlotClear(int32_t ymin, int32_t ymax){
@@ -1258,7 +1303,7 @@ void ST7735_PlotClear(int32_t ymin, int32_t ymax){
 
 // *************** ST7735_PlotPoint ********************
 // Used in the voltage versus time plot, plot one point at y
-// It does output to display 
+// It does output to display
 // Inputs: y is the y coordinate of the point plotted
 // Outputs: none
 void ST7735_PlotPoint(int32_t y){int32_t j;
@@ -1278,7 +1323,7 @@ void ST7735_PlotPoint(int32_t y){int32_t j;
 }
 // *************** ST7735_PlotLine ********************
 // Used in the voltage versus time plot, plot line to new point
-// It does output to display 
+// It does output to display
 // Inputs: y is the y coordinate of the point plotted
 // Outputs: none
 int32_t lastj=0;
@@ -1313,7 +1358,7 @@ void ST7735_PlotLine(int32_t y){int32_t i,j;
 
 // *************** ST7735_PlotPoints ********************
 // Used in the voltage versus time plot, plot two points at y1, y2
-// It does output to display 
+// It does output to display
 // Inputs: y1 is the y coordinate of the first point plotted
 //         y2 is the y coordinate of the second point plotted
 // Outputs: none
@@ -1356,36 +1401,36 @@ int32_t j;
 // full scaled defined as 3V
 // Input is 0 to 511, 0 => 159 and 511 => 32
 uint8_t const dBfs[512]={
-159, 159, 145, 137, 131, 126, 123, 119, 117, 114, 112, 110, 108, 107, 105, 104, 103, 101, 
-  100, 99, 98, 97, 96, 95, 94, 93, 93, 92, 91, 90, 90, 89, 88, 88, 87, 87, 86, 85, 85, 84, 
-  84, 83, 83, 82, 82, 81, 81, 81, 80, 80, 79, 79, 79, 78, 78, 77, 77, 77, 76, 76, 76, 75, 
-  75, 75, 74, 74, 74, 73, 73, 73, 72, 72, 72, 72, 71, 71, 71, 71, 70, 70, 70, 70, 69, 69, 
-  69, 69, 68, 68, 68, 68, 67, 67, 67, 67, 66, 66, 66, 66, 66, 65, 65, 65, 65, 65, 64, 64, 
-  64, 64, 64, 63, 63, 63, 63, 63, 63, 62, 62, 62, 62, 62, 62, 61, 61, 61, 61, 61, 61, 60, 
-  60, 60, 60, 60, 60, 59, 59, 59, 59, 59, 59, 59, 58, 58, 58, 58, 58, 58, 58, 57, 57, 57, 
-  57, 57, 57, 57, 56, 56, 56, 56, 56, 56, 56, 56, 55, 55, 55, 55, 55, 55, 55, 55, 54, 54, 
-  54, 54, 54, 54, 54, 54, 53, 53, 53, 53, 53, 53, 53, 53, 53, 52, 52, 52, 52, 52, 52, 52, 
-  52, 52, 52, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 50, 50, 50, 50, 50, 50, 50, 50, 50, 
-  50, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 
-  48, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 46, 46, 46, 46, 46, 46, 46, 46, 46, 
-  46, 46, 46, 46, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 44, 44, 44, 44, 44, 
-  44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 
-  43, 43, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 41, 41, 41, 41, 41, 
-  41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 
-  40, 40, 40, 40, 40, 40, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 
-  39, 39, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 37, 
-  37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 36, 36, 36, 36, 
-  36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 35, 35, 35, 35, 35, 
-  35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 34, 34, 34, 34, 34, 34, 
-  34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33, 33, 
-  33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 32, 32, 32, 
+        159, 159, 145, 137, 131, 126, 123, 119, 117, 114, 112, 110, 108, 107, 105, 104, 103, 101,
+        100, 99, 98, 97, 96, 95, 94, 93, 93, 92, 91, 90, 90, 89, 88, 88, 87, 87, 86, 85, 85, 84,
+        84, 83, 83, 82, 82, 81, 81, 81, 80, 80, 79, 79, 79, 78, 78, 77, 77, 77, 76, 76, 76, 75,
+        75, 75, 74, 74, 74, 73, 73, 73, 72, 72, 72, 72, 71, 71, 71, 71, 70, 70, 70, 70, 69, 69,
+        69, 69, 68, 68, 68, 68, 67, 67, 67, 67, 66, 66, 66, 66, 66, 65, 65, 65, 65, 65, 64, 64,
+        64, 64, 64, 63, 63, 63, 63, 63, 63, 62, 62, 62, 62, 62, 62, 61, 61, 61, 61, 61, 61, 60,
+        60, 60, 60, 60, 60, 59, 59, 59, 59, 59, 59, 59, 58, 58, 58, 58, 58, 58, 58, 57, 57, 57,
+        57, 57, 57, 57, 56, 56, 56, 56, 56, 56, 56, 56, 55, 55, 55, 55, 55, 55, 55, 55, 54, 54,
+        54, 54, 54, 54, 54, 54, 53, 53, 53, 53, 53, 53, 53, 53, 53, 52, 52, 52, 52, 52, 52, 52,
+        52, 52, 52, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+        50, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
+        48, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 46, 46, 46, 46, 46, 46, 46, 46, 46,
+        46, 46, 46, 46, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 44, 44, 44, 44, 44,
+        44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43,
+        43, 43, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 41, 41, 41, 41, 41,
+        41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
+        40, 40, 40, 40, 40, 40, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
+        39, 39, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 37,
+        37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 36, 36, 36, 36,
+        36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 35, 35, 35, 35, 35,
+        35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 34, 34, 34, 34, 34, 34,
+        34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33, 33,
+        33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 32, 32, 32,
   32, 32, 32, 32, 32, 32, 32, 32, 32, 32
 };
 
 // *************** ST7735_PlotdBfs ********************
 // Used in the amplitude versus frequency plot, plot bar point at y
 // 0 to 0.625V scaled on a log plot from min to max
-// It does output to display 
+// It does output to display
 // Inputs: y is the y ADC value of the bar plotted
 // Outputs: none
 void ST7735_PlotdBfs(int32_t y){
@@ -1405,7 +1450,7 @@ int32_t j;
 // *************** ST7735_PlotNext ********************
 // Used in all the plots to step the X coordinate one pixel
 // X steps from 0 to 127, then back to 0 again
-// It does not output to display 
+// It does not output to display
 // Inputs: none
 // Outputs: none
 void ST7735_PlotNext(void){
@@ -1419,7 +1464,7 @@ void ST7735_PlotNext(void){
 // *************** ST7735_PlotNextErase ********************
 // Used in all the plots to step the X coordinate one pixel
 // X steps from 0 to 127, then back to 0 again
-// It clears the vertical space into which the next pixel will be drawn 
+// It clears the vertical space into which the next pixel will be drawn
 // Inputs: none
 // Outputs: none
 void ST7735_PlotNextErase(void){
@@ -1441,7 +1486,7 @@ void ST7735_PlotNextErase(void){
 //    {   for(j=0;j<N;j++){
 //          ST7735_PlotPoint(data[i++]); // called N times
 //        }
-//        ST7735_PlotNext(); 
+//        ST7735_PlotNext();
 //    }   // called 128 times
 
 // Example 2b Voltage versus time (N data points/pixel, time scale)
@@ -1449,7 +1494,7 @@ void ST7735_PlotNextErase(void){
 //    {   for(j=0;j<N;j++){
 //          ST7735_PlotLine(data[i++]); // called N times
 //        }
-//        ST7735_PlotNext(); 
+//        ST7735_PlotNext();
 //    }   // called 128 times
 
 // Example 3 Voltage versus frequency (512 points)
@@ -1457,10 +1502,10 @@ void ST7735_PlotNextErase(void){
 //    ST7735_PlotClear(0,1023);  // clip large magnitudes
 //    {
 //        ST7735_PlotBar(mag[i++]); // called 4 times
-//        ST7735_PlotBar(mag[i++]); 
-//        ST7735_PlotBar(mag[i++]); 
-//        ST7735_PlotBar(mag[i++]); 
-//        ST7735_PlotNext(); 
+//        ST7735_PlotBar(mag[i++]);
+//        ST7735_PlotBar(mag[i++]);
+//        ST7735_PlotBar(mag[i++]);
+//        ST7735_PlotNext();
 //    }   // called 128 times
 
 // Example 4 Voltage versus frequency (512 points), dB scale
@@ -1468,10 +1513,10 @@ void ST7735_PlotNextErase(void){
 //    ST7735_PlotClear(0,511);  // parameters ignored
 //    {
 //        ST7735_PlotdBfs(mag[i++]); // called 4 times
-//        ST7735_PlotdBfs(mag[i++]); 
-//        ST7735_PlotdBfs(mag[i++]); 
-//        ST7735_PlotdBfs(mag[i++]); 
-//        ST7735_PlotNext(); 
+//        ST7735_PlotdBfs(mag[i++]);
+//        ST7735_PlotdBfs(mag[i++]);
+//        ST7735_PlotdBfs(mag[i++]);
+//        ST7735_PlotNext();
 //    }   // called 128 times
 
 // *************** ST7735_OutChar ********************
@@ -1511,7 +1556,7 @@ void ST7735_OutString(char *ptr){
   }
 }
 // ************** ST7735_SetTextColor ************************
-// Sets the color in which the characters will be printed 
+// Sets the color in which the characters will be printed
 // Background color is fixed at black
 // Input:  16-bit packed color
 // Output: none
@@ -1528,11 +1573,12 @@ int fputc(int ch, FILE *f){
 int fgetc (FILE *f){
   return 0;
 }
- /* Function called when file error occurs.
-int32_t ferror(FILE *f){
-   Your implementation of ferror
+/*// Function called when file error occurs.
+int ferror(FILE *f){
+  / Your implementation of ferror /
   return EOF;
-} */
+}*/
+
 // Abstraction of general output device
 // Volume 2 section 3.4.5
 
@@ -1562,6 +1608,6 @@ void Output_On(void){ // Turns on the display
 // Background color is fixed at black
 // Input:  16-bit packed color
 // Output: none
-void Output_Color(uint32_t newColor){ // Set color of future output 
+void Output_Color(uint32_t newColor) { // Set color of future output
   ST7735_SetTextColor(newColor);
 }
