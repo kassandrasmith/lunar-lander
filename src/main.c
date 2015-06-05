@@ -7,6 +7,7 @@
 #include "../inc/PLL.h"							    //Phase-Lock-Loop, used to calibrate the clock spees
 #include "../inc/initialization.h"		            //initialization sequences
 #include "../inc/main.h"
+#include "../inc/images.h"
 
 void DisableInterrupts();        // Disable interrupts (HACK)may need to include for interrupts to work
 void EnableInterrupts();        // Enable interrupts  (HACK)may need to include for interrupts to work
@@ -33,7 +34,7 @@ uint16_t score;
 uint16_t time;
 uint16_t fuel = 1000;
 char multiplier =1; //To be used to increase score according to where the lander lands
-int ttime; //TODO set to refresh rate
+int ttime = 1; //TODO set to refresh rate
 //declare variables
 int16_t vvelocity;                  //can be negative if vertical position is increasing
 int16_t vaccel;                     //negative value causes increase in vertical position
@@ -41,6 +42,8 @@ int16_t hvelocity;                  //negative value moves left, positive moves 
 uint16_t altitude=1;                //initialize to topmost of landscape-oriented screen
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 90;                 //0 points upwards
+int accel = 1;
+
 
 int main(void) {
 
@@ -49,13 +52,18 @@ int main(void) {
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
     PortF_Init();
     ST7735_InitR(INITR_REDTAB);
-    SysTick_Init((80000000/30)-1);                              // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1 ;subtract one to get interrupts
+    //SysTick_Init((80000000/30)-1);                              // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1 ;subtract one to get interrupts
     EnableInterrupts();                                         //end of initializations, enable interrupts
     //initial state for screen
-    ST7735_FillScreen(0x000000);                                //fill screen with black
+    ST7735_FillScreen(0x001100);                                //fill screen with black
     ST7735_SetCursor(1, 1);
-    //ST7735_DrawBitmap(xposit, altitude,(!!!)lander, (!!!)x-size, (!!!)y-size );
+    ST7735_DrawBitmap(64, 20, test, 4, 4);
+    ST7735_OutString("Hello");
+    while (true) {
+        update();
+        render();
 
+    }
     while(true) {
         process_input();
         update();
@@ -70,11 +78,11 @@ void process_input(void) {
     bool rightButtonPressed = rightbutton == rightpushed;
     bool leftButtonPressed = leftbutton == leftpushed;
     if (!noFuel & jetButtonPressed) {
-        vaccel = -0.811;    //negative accelaration forces lander opposite gravity
+        accel = -0.811;    //negative accelaration forces lander opposite gravity
         fuel--;             //using fuel
     }
     if (noFuel | (!jetButtonPressed)) {
-        vaccel = 1.622;
+        accel = 1.622;
     }
 
     if (leftButtonPressed) {
@@ -87,10 +95,15 @@ void process_input(void) {
 //update location and time
 void update (void){
     time++;
-    //TODO Uncrap the physics
-    vvelocity = (vvelocity + (vaccel * ttime));
-   hvelocity =  hvelocity*cos(angle)*ttime;
-   altitude = (altitude + (vvelocity*sin(angle) * ttime) + (.5 * vaccel * (ttime ^ 2)));
+    const float angle = 3.14/2.0;
+ //   const int accel = -1;
+    int vaccel = sin(angle) * accel;
+    int haccel = cos(angle) * accel;
+    vvelocity += 1 * ttime;
+    hvelocity += haccel * ttime;
+
+    altitude += vvelocity * ttime;
+    xposit += hvelocity * ttime;
 }
 //"check" the things that will kill you
 void check (void){
@@ -130,7 +143,7 @@ void render (void) {
     ST7735_SetCursor(1, 30); ///FIXME set cursor to write below time
     write_fuel(fuel);
 
-//ST7735_DrawBitmap(xposit, altitude,(!!!)lander, (!!!)x-size, (!!!)y-size ); //need to generate lander
+    ST7735_DrawBitmap(xposit, altitude, test, 4, 4); //need to generate lander
     //TODO draw the lander
 //TODO generate terrain
 }
