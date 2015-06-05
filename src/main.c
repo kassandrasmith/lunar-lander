@@ -136,33 +136,34 @@ void render (void) {
 }
 
 //Output some sort of death message
-void die(deathtype) {
+void die(DeathType_t deathtype) {
     ST7735_SetCursor(40, 1); ///FIXME set cursors
     ST7735_OutString("You died!");
-    if (deathtype == 1) {
-        ST7735_SetCursor(40, 40);
-        ST7735_OutString("Out of time!");
-        ST7735_OutString("Final score:");
-        write_score(score);
-        //TODO write a slight delay
-    }
-    if (deathtype == 2) {
-        ST7735_SetCursor(40, 40);
-        ST7735_OutString("Lost 20 fuel units.");
-        fuel - 20;
-        ST7735_SetCursor(40, 60);
-        ST7735_OutString("Fuel left:");
-        ST7735_SetCursor(40, 80);
-        write_fuel(fuel);
-        ST7735_SetCursor(40, 100);
-        ST7735_OutString("Current score:");
-        write_score(score);
-        //TODO write a slight delay
+    switch (deathtype) {
+        case CRASHED:
+            ST7735_SetCursor(40, 40);
+            ST7735_OutString("Lost 20 fuel units.");
+            fuel =- 20;
+            ST7735_SetCursor(40, 60);
+            ST7735_OutString("Fuel left:");
+            ST7735_SetCursor(40, 80);
+            write_fuel(fuel);
+            ST7735_SetCursor(40, 100);
+            ST7735_OutString("Current score:");
+            write_score(score);
+            break;
+        case OUTOFTIME:
+            ST7735_SetCursor(40, 40);
+            ST7735_OutString("Out of time!");
+            ST7735_OutString("Final score:");
+            write_score(score);
+            //TODO write a slight delay
+            break;
     }
 }
 
 //TODO write a message for winning
-    void land(void) {
+    void land() {
     ST7735_SetCursor(40, 1); ///FIXME set cursors
     ST7735_OutString("You landed!");
     if(fuel>0){
@@ -203,28 +204,6 @@ void die(deathtype) {
         //outputs time value formatted min:sec
         ST7735_OutChar(min + 30); //convert min to the ascii value
         ST7735_OutChar(0x3A); // ":" in ASCII
-        st7735_OutChar(seca + 30);
+        ST7735_OutChar(seca + 30);
         ST7735_OutChar(secb + 30);
-
-    ST7735_SetCursor(1, 30); ///TODO set cursor to write below time
-    ST7735_OutChar (fuel/1000);
-    outfuel=fuel/1000;
-    ST7735_OutChar ((fuel-( outfuel*1000))/100);
-    outfuel=fuel/100;
-    ST7735_OutChar ((fuel-( outfuel*100))/10);
-    outfuel=fuel/10;
-    ST7735_OutChar ((fuel-( outfuel*10)));
-}
-void write_time (uint16_t time){
-    char min = time / 60;
-    uint8_t sec = (time - min * 60);
-    uint8_t seca = (sec / 10);
-    uint8_t secb = (sec - seca);
-    //outputs time value formatted min:sec
-    ST7735_SetCursor(1, 15); //TODO set cursor to write below score
-    ST7735_OutChar(min + 30); //convert min to the ascii value
-    ST7735_OutChar(0x3A); // ":" in ASCII
-    ST7735_OutChar(seca + 30);
-    ST7735_OutChar(secb + 30);
-}
     }
