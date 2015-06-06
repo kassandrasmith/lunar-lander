@@ -205,30 +205,27 @@ void die(DeathType_t deathtype) {
         outScore = score / 10;
         ST7735_OutChar(((score - (outScore * 10))) + 30);
     }
-    void write_fuel(uint16_t fuel) {
-        uint16_t outfuel = fuel;
-        ST7735_OutChar(fuel / 1000);
-        outfuel = fuel / 1000;
-        ST7735_OutChar(((fuel - (outfuel * 1000)) / 100) + 30);
-        outfuel = fuel / 100;
-        ST7735_OutChar(((fuel - (outfuel * 100)) / 10) + 30);
-        outfuel = fuel / 10;
-        ST7735_OutChar((fuel - (outfuel * 10)) + 30);
-    }
-    void write_time(uint16_t time) {
-        char min = time / 60;
-        uint8_t sec = (time - min * 60);
-        uint8_t seca = (sec / 10);
-        uint8_t secb = (sec - seca);
-        //outputs time value formatted min:sec
-        ST7735_OutChar(min + 30); //convert min to the ascii value
-        ST7735_OutChar(0x3A); // ":" in ASCII
-        ST7735_OutChar(seca + 30);
-        ST7735_OutChar(secb + 30);
-    }
+
+void write_fuel(uint16_t inFuel) {
+    //uint16_t outFuel = inFuel;
+    draw_dec(inFuel);
+
+}
+
+void write_time(uint16_t time) {
+    char min = time / 60;
+    uint8_t sec = (time - min * 60);
+    uint8_t seca = (sec / 10);
+    uint8_t secb = (sec - seca);
+    //outputs time value formatted min:sec
+    ST7735_OutChar(min + 30); //convert min to the ascii value
+    ST7735_OutChar(0x3A); // ":" in ASCII
+    ST7735_OutChar(seca + 30);
+    ST7735_OutChar(secb + 30);
+}
 
 char to_ASCII(char num) {
     num += 0x30;
     return num;
-}
+    }
 
