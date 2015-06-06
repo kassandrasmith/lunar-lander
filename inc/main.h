@@ -17,6 +17,7 @@ void write_score (uint16_t);
 void write_fuel (uint16_t);
 void write_time (uint16_t);
 
+char to_ASCII(char);
 
 
 

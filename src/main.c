@@ -1,10 +1,10 @@
-#include <stdio.h>							//Standard libraries
-#include <stdint.h>							//Standard libraries
-#include <stdbool.h>                        //Standard libraries
-#include <math.h>                           //Standard libraries
-#include "inc/tm4c123gh6pm.h"				    //inclusion of hardware library
-#include "../inc/ST7735.h"							//different functions for the screen
-#include "../inc/PLL.h"							    //Phase-Lock-Loop, used to calibrate the clock spees
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <math.h>
+#include "inc/tm4c123gh6pm.h"
+#include "../inc/LCD.h"
+#include "../inc/PLL.h"     //Phase-Lock-Loop, used to calibrate the clock spees
 #include "../inc/initialization.h"		            //initialization sequences
 #include "../inc/main.h"
 #include "../inc/images.h"
@@ -32,8 +32,8 @@ void DisableInterrupts(void) {
 //declare global variables
 uint16_t score;
 uint16_t time;
-uint16_t fuel = 1000;
-char multiplier =1; //To be used to increase score according to where the lander lands
+uint16_t fuel = 1234;
+char multiplier = 0; //To be used to increase score according to where the lander lands
 int ttime = 1; //TODO set to refresh rate
 //declare variables
 int16_t vvelocity;                  //can be negative if vertical position is increasing
@@ -51,14 +51,19 @@ int main(void) {
     DisableInterrupts();                                        // Disable interrupts for initializations
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
     PortF_Init();
-    ST7735_InitR(INITR_REDTAB);
-    //SysTick_Init((80000000/30)-1);                              // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1 ;subtract one to get interrupts
+    screen_init();
+    // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1
+    // subtract one to get interrupts
+    //SysTick_Init((80000000/30)-1);
     EnableInterrupts();                                         //end of initializations, enable interrupts
     //initial state for screen
-    ST7735_FillScreen(0x001100);                                //fill screen with black
-    ST7735_SetCursor(1, 1);
-    ST7735_DrawBitmap(64, 20, test, 4, 4);
-    ST7735_OutString("Hello");
+    fill_background(0x0000);
+
+    draw_bitmap(64, 20, lander, 7, 9);
+    while (true) {
+        write_fuel(fuel);
+    }
+
     while (true) {
         update();
         render();
@@ -139,12 +144,12 @@ void check (void){
 void render (void) {
     ST7735_SetCursor(1, 1); //Set cursor to top left
     write_score(score);
-    ST7735_SetCursor(1, 15); //FIXME set cursor to write below score
+    ST7735_SetCursor(1, 2); //FIXME set cursor to write below score
     write_time(time);
-    ST7735_SetCursor(1, 30); ///FIXME set cursor to write below time
+    ST7735_SetCursor(1, 3); ///FIXME set cursor to write below time
     write_fuel(fuel);
 
-    ST7735_DrawBitmap(xposit, altitude, test, 4, 4); //need to generate lander
+    ST7735_DrawBitmap(xposit, altitude, lander, 7, 9); //need to generate lander
     //TODO draw the lander
 //TODO generate terrain
 }
@@ -221,3 +226,9 @@ void die(DeathType_t deathtype) {
         ST7735_OutChar(seca + 30);
         ST7735_OutChar(secb + 30);
     }
+
+char to_ASCII(char num) {
+    num += 0x30;
+    return num;
+}
+
