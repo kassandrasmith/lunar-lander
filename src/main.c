@@ -99,11 +99,12 @@ void update (void){
  //   const int accel = -1;
     int vaccel = sin(angle) * accel;
     int haccel = cos(angle) * accel;
+
     vvelocity += 1 * ttime;
     hvelocity += haccel * ttime;
 
-    altitude += vvelocity * ttime;
-    xposit += hvelocity * ttime;
+    altitude += vvelocity * ttime + (.5 * (accel * accel));
+    xposit += hvelocity * ttime + (.5 * (accel * accel));
 }
 //"check" the things that will kill you
 void check (void){
@@ -193,21 +194,21 @@ void die(DeathType_t deathtype) {
         uint16_t outScore = score;
         ST7735_OutChar(score / 1000);
         outScore = score / 1000;
-        ST7735_OutChar((score - (outScore * 1000)) / 100);
+        ST7735_OutChar(((score - (outScore * 1000)) / 100) + 30);       //Add thirty to convert to ASCII
         outScore = score / 100;
-        ST7735_OutChar((score - (outScore * 100)) / 10);
+        ST7735_OutChar(((score - (outScore * 100)) / 10) + 30);
         outScore = score / 10;
-        ST7735_OutChar((score - (outScore * 10)));
+        ST7735_OutChar(((score - (outScore * 10))) + 30);
     }
     void write_fuel(uint16_t fuel) {
         uint16_t outfuel = fuel;
         ST7735_OutChar(fuel / 1000);
         outfuel = fuel / 1000;
-        ST7735_OutChar((fuel - (outfuel * 1000)) / 100);
+        ST7735_OutChar(((fuel - (outfuel * 1000)) / 100) + 30);
         outfuel = fuel / 100;
-        ST7735_OutChar((fuel - (outfuel * 100)) / 10);
+        ST7735_OutChar(((fuel - (outfuel * 100)) / 10) + 30);
         outfuel = fuel / 10;
-        ST7735_OutChar((fuel - (outfuel * 10)));
+        ST7735_OutChar((fuel - (outfuel * 10)) + 30);
     }
     void write_time(uint16_t time) {
         char min = time / 60;
