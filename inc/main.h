@@ -8,6 +8,8 @@ typedef enum DeathType {
 } DeathType_t;
 
 void process_input(void);
+
+void game_loop();
 void update(void);
 void check(void);
 void render(void);

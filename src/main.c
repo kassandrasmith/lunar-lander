@@ -8,26 +8,17 @@
 #include "../inc/initialization.h"		            //initialization sequences
 #include "../inc/main.h"
 #include "../inc/images.h"
-
-void DisableInterrupts();        // Disable interrupts (HACK)may need to include for interrupts to work
-void EnableInterrupts();        // Enable interrupts  (HACK)may need to include for interrupts to work
-void Delay100ms(uint32_t count); 	    // time delay in 0.1 seconds
+#include "driverlib/systick.h"
+#include "driverlib/fpu.h"
+#include "driverlib/interrupt.h"
 
 //define buttons
 #define jetbutton (GPIO_PORTE_DATA_R & 0x01)
 #define jetpushed 0x01
 #define leftbutton (GPIO_PORTE_DATA_R & 0x02)
 #define leftpushed 0x02
-#define rightbutton (GPIO_PORTE_DATA_R & 0x03)
-#define rightpushed 0x03
-
-void EnableInterrupts(void) {
-    __asm  ("    CPSIE  I\n"
-            "    BX     LR\n");
-}
-
-void DisableInterrupts(void) {
-}
+#define rightbutton (GPIO_PORTE_DATA_R & 0x04)
+#define rightpushed 0x04
 
 //declare global variables
 uint16_t score;
@@ -48,36 +39,29 @@ int accel = 1;
 int main(void) {
 
     //Run initializations
-    DisableInterrupts();                                        // Disable interrupts for initializations
+    IntMasterDisable();
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
     PortF_Init();
     screen_init();
     // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1
     // subtract one to get interrupts
-    //SysTick_Init((80000000/30)-1);
-    EnableInterrupts();                                         //end of initializations, enable interrupts
+    SysTickPeriodSet(2000000u);
+    SysTickEnable();
+    SysTickIntRegister(game_loop);
+    SysTickIntEnable();
+
+    IntMasterEnable();                                         //end of initializations, enable interrupts
     //initial state for screen
     fill_background(0x0000);
 
     draw_bitmap(64, 20, lander, 7, 9);
-    while (true) {
-        write_fuel(fuel);
-    }
-
-    while (true) {
-        update();
-        render();
-
-    }
-    while(true) {
-        process_input();
-        update();
-        check();
-        render();
-    }
 }
 
-void process_input(void) {
+void game_loop() {
+    draw_string(0, 0, "Hello", 0xFFFFu);
+}
+
+void process_input() {
     bool noFuel = fuel==0;
     bool jetButtonPressed = jetbutton == jetpushed;
     bool rightButtonPressed = rightbutton == rightpushed;
@@ -101,15 +85,15 @@ void process_input(void) {
 void update (void){
     time++;
     const float angle = 3.14/2.0;
- //   const int accel = -1;
-    int vaccel = sin(angle) * accel;
-    int haccel = cos(angle) * accel;
+    const float accel = -0.5;
+    float vaccel = sin(angle) * accel;
+    float haccel = cos(angle) * accel;
 
-    vvelocity += 1 * ttime;
+    vvelocity += vaccel * ttime;
     hvelocity += haccel * ttime;
 
-    altitude += vvelocity * ttime + (.5 * (accel * accel));
-    xposit += hvelocity * ttime + (.5 * (accel * accel));
+    altitude += vvelocity * ttime;
+    xposit += hvelocity * ttime;
 }
 //"check" the things that will kill you
 void check (void){
@@ -181,51 +165,32 @@ void die(DeathType_t deathtype) {
     }
 }
 
-//TODO write a message for winning
     void land() {
-    ST7735_SetCursor(40, 1); ///FIXME set cursors
-    ST7735_OutString("You landed!");
+        draw_string(40, 20, "You landed!", 0xFFFF);
     if(fuel>0){
-        ST7735_SetCursor(40, 40);
-        ST7735_OutString("Fuel remaining:");
+        draw_string(40, 40, "Fuel remaining:", 0xFFFF);
         write_fuel(fuel);
         //TODO write a slight delay
     }
     }
 
-//TODO change math to use modulo
-    void write_score(uint16_t score) {
-        score = (score + (100 * multiplier));
-        uint16_t outScore = score;
-        ST7735_OutChar(score / 1000);
-        outScore = score / 1000;
-        ST7735_OutChar(((score - (outScore * 1000)) / 100) + 30);       //Add thirty to convert to ASCII
-        outScore = score / 100;
-        ST7735_OutChar(((score - (outScore * 100)) / 10) + 30);
-        outScore = score / 10;
-        ST7735_OutChar(((score - (outScore * 10))) + 30);
-    }
+void write_score(uint16_t score) {
+    draw_dec(score);
+}
 
 void write_fuel(uint16_t inFuel) {
-    //uint16_t outFuel = inFuel;
     draw_dec(inFuel);
-
 }
 
 void write_time(uint16_t time) {
     char min = time / 60;
+    draw_dec(min);
+
     uint8_t sec = (time - min * 60);
-    uint8_t seca = (sec / 10);
-    uint8_t secb = (sec - seca);
-    //outputs time value formatted min:sec
-    ST7735_OutChar(min + 30); //convert min to the ascii value
-    ST7735_OutChar(0x3A); // ":" in ASCII
-    ST7735_OutChar(seca + 30);
-    ST7735_OutChar(secb + 30);
+    draw_dec(sec);
 }
 
 char to_ASCII(char num) {
     num += 0x30;
     return num;
-    }
-
+}
