@@ -43,9 +43,11 @@ int main(void) {
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
     PortF_Init();
     screen_init();
+    //FPUStackingEnable();
+
     // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1
     // subtract one to get interrupts
-    SysTickPeriodSet(2000000u);
+    SysTickPeriodSet(270000u);
     SysTickEnable();
     SysTickIntRegister(game_loop);
     SysTickIntEnable();
@@ -53,12 +55,14 @@ int main(void) {
     IntMasterEnable();                                         //end of initializations, enable interrupts
     //initial state for screen
     fill_background(0x0000);
-
-    draw_bitmap(64, 20, lander, 7, 9);
+    // We need to stall here and wait for systick to trigger the game
+    // loop at regular intervals.
+    while(true);
 }
 
 void game_loop() {
-    draw_string(0, 0, "Hello", 0xFFFFu);
+
+    draw_bitmap(10,10,lander,7,9);
 }
 
 void process_input() {
@@ -133,9 +137,8 @@ void render (void) {
     ST7735_SetCursor(1, 3); ///FIXME set cursor to write below time
     write_fuel(fuel);
 
-    ST7735_DrawBitmap(xposit, altitude, lander, 7, 9); //need to generate lander
-    //TODO draw the lander
-//TODO generate terrain
+    draw_bitmap(xposit, altitude, lander, 7, 9);
+    //TODO generate terrain
 }
 
 //Output some sort of death message
