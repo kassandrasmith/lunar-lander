@@ -3,9 +3,14 @@
 
 #define ST7735
 
+#ifdef ST7735
+#define BLACK 0x0000
+#define WHITE 0xFFFF
+#endif
+
 void screen_init() {
 #ifdef ST7735
-    ST7735_InitR(INITR_REDTAB);
+    ST7735_InitR(INITR_GREENTAB);
 #endif
 }
 

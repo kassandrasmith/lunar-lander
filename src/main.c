@@ -4,24 +4,14 @@
 #include <math.h>
 #include "inc/tm4c123gh6pm.h"
 #include "../inc/LCD.h"
-#include "../inc/PLL.h"     //Phase-Lock-Loop, used to calibrate the clock spees
-#include "../inc/initialization.h"		            //initialization sequences
+#include "../inc/PLL.h"
+#include "../inc/initialization.h"
 #include "../inc/main.h"
 #include "../inc/images.h"
 #include "driverlib/systick.h"
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
-
-//define buttons
-#define jetbutton (GPIO_PORTE_DATA_R & 0x01)
-#define jetpushed 0x01
-#define leftbutton (GPIO_PORTE_DATA_R & 0x02)
-#define leftpushed 0x02
-#define rightbutton (GPIO_PORTE_DATA_R & 0x04)
-#define rightpushed 0x04
-
-#define BLACK 0x0000
-#define WHITE 0xFFFF
+#include "driverlib/sysctl.h"
 
 //declare global variables
 uint16_t score;
@@ -33,7 +23,7 @@ int ttime = 1; //TODO set to refresh rate
 int16_t vvelocity;                  //can be negative if vertical position is increasing
 int16_t vaccel;                     //negative value causes increase in vertical position
 int16_t hvelocity;                  //negative value moves left, positive moves right
-uint16_t altitude=1;                //initialize to topmost of landscape-oriented screen
+uint16_t altitude = 9;                //initialize to topmost of landscape-oriented screen
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 90;                 //0 points upwards
 int accel = 1;
@@ -46,17 +36,18 @@ int main(void) {
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
     PortF_Init();
     screen_init();
-    //FPUStackingEnable();
+    FPUStackingEnable();
 
-    // Frequency of Quartz= 80MHz / 30 Hz game engine = Interrupt rate +1
-    // subtract one to get interrupts
-    SysTickPeriodSet(270000u);
+    // Trigger an interrupt every 30th of a second.
+    // The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
+    SysTickPeriodSet(SysCtlClockGet()/30.0);
     SysTickEnable();
     SysTickIntRegister(game_loop);
     SysTickIntEnable();
 
     IntMasterEnable();                                         //end of initializations, enable interrupts
     //initial state for screen
+
     fill_background(BLACK);
     // We need to stall here and wait for systick to trigger the game
     // loop at regular intervals.
@@ -64,20 +55,21 @@ int main(void) {
 }
 
 void game_loop() {
-
-    draw_bitmap(10,10,lander,7,9);
+    //update();
+    render();
+    
 }
 
 void process_input() {
-    bool noFuel = fuel==0;
-    bool jetButtonPressed = jetbutton == jetpushed;
-    bool rightButtonPressed = rightbutton == rightpushed;
-    bool leftButtonPressed = leftbutton == leftpushed;
+    bool noFuel = fuel == 0;
+    bool jetButtonPressed = GPIO_PORTE_DATA_R & (1 << 0);
+    bool rightButtonPressed = GPIO_PORTE_DATA_R & (1 << 1);
+    bool leftButtonPressed = GPIO_PORTE_DATA_R & (1 << 2);
     if (!noFuel & jetButtonPressed) {
         accel = -0.811;    //negative accelaration forces lander opposite gravity
         fuel--;             //using fuel
     }
-    if (noFuel | (!jetButtonPressed)) {
+    if (noFuel | !jetButtonPressed) {
         accel = 1.622;
     }
 
