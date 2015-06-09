@@ -27,13 +27,19 @@ float accel;                     //negative value causes increase in vertical po
 int16_t hvelocity;                  //negative value moves left, positive moves right
 uint16_t altitude = 9;                //initialize to topmost of landscape-oriented screen
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
-uint16_t angle = 90;                 //0 points upwards
+uint16_t angle = 4;                 //0 points upwards
 
 
 int main(void) {
     //Run initializations
+    //Interrupts must be disabled here to prevent them
+    //from triggering during an initialization
     IntMasterDisable();
-    DAC_Init();                                                 //Digital to analog converter necessary for sounds
+    //Digital to analog converter for sounds.
+    //We utilize a 6 bit 2R styled DAC
+    DAC_Init();
+    //Port F controls on-board buttons and LEDs which we use for debugging
+    // (may not be necessary in later releases)
     PortF_Init();
     screen_init();
     FPUStackingEnable();
@@ -46,8 +52,7 @@ int main(void) {
     SysTickIntEnable();
 
     IntMasterEnable();                                         //end of initializations, enable interrupts
-    //initial state for screen
-
+    // initial state for screen
     fill_background(BLACK);
     // We need to stall here and wait for systick to trigger the game
     // loop at regular intervals.
@@ -58,7 +63,7 @@ void game_loop() {
     update();
     render();
     tick();
-    toggleLED(30);
+    toggleLED(30);      //Debugging heartbeat
 }
 
 void process_input() {
@@ -85,8 +90,8 @@ void process_input() {
 //update location and time
 void update (void){
     time++;
-    float vaccel = sin(angle) * accel;
-    float haccel = cos(angle) * accel;
+    float vaccel = sinAngle(angle) * accel;
+    float haccel = cosAngle(angle) * accel;
 
     vvelocity += vaccel * ttime;
     hvelocity += haccel * ttime;
@@ -116,11 +121,11 @@ void check (void){
     if (outOfTime) {
         die(OUTOFTIME);
     }
-    if (angle == -1) {
-        angle = 179;
-    }
-    if (angle == 181) {
+    if (angle <= -1) {
         angle = 0;
+    }
+    if (angle >= 9) {
+        angle = 8;
     }
 }
 
@@ -130,7 +135,7 @@ void render (void) {
     write_fuel(fuel);
 
     draw_bitmap(xposit, altitude, lander, 7, 9);
-    //TODO generate terrain
+    draw_terrain();
 }
 
 //Output some sort of death message
@@ -155,14 +160,14 @@ void die(DeathType_t deathtype) {
     }
 }
 
-    void land() {
+void land() {
         draw_string(40, 20, "You landed!", WHITE);
     if(fuel>0){
         draw_string(40, 40, "Fuel remaining:", WHITE);
         write_fuel(fuel);
         //TODO write a slight delay
     }
-    }
+}
 
 void write_score(uint16_t score) {
     draw_dec(0, 0, score);
@@ -175,7 +180,17 @@ void write_fuel(uint16_t inFuel) {
 void write_time(uint16_t time) {
     uint8_t min = (uint8_t) (time / 60);
     draw_dec(3, 0, min);
-
+    draw_string(4, 0, ":", WHITE);
     uint8_t sec = time - min * 60;
-    draw_dec(4, 0, sec);
+    draw_dec(5, 0, sec);
+}
+
+void draw_terrain(void) {
+
+    for(int i=0; i<130; i++) {
+        int terrainx = i;
+        int terrainy = 10;
+
+        draw_pixel(terrainx, terrainy, WHITE);
+    }
 }

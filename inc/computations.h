@@ -1,37 +1,24 @@
 #ifndef LUNAR_LANDER_COMPUTATIONS_H
 #define LUNAR_LANDER_COMPUTATIONS_H
 
+//"angle" refers to a number from 0 to 8 which corresponds to steps on the unit circle
+//an "angle" of 0 corresponds to 180 degrees
+//an "angle" of 8 corresponds to 0 degrees.
 
-//TODO typedef
-//Sine Table
-//sin0 = sin180 = 0;       //0
-//sin10 = sin170 = 0.173;
-//sin20 = sin160 = 0.342;
-//sin30 = sin150 = 0.5;    //pi/6
-//sin40 = sin140 = 0.642;
-//sin45 = sin135 = 0.707;  //pi/4
-//sin50 = sin130 = 0.766;
-//sin60 = sin120 = 0.866; //pi/3
-//sin70 = sin110 = 0.939;
-//sin80 = sin100 = 0.984;
-//sin90 = 1.0;            //pi/2
+//0 = deg 180 = pi
+//1 = deg 150 = 5pi/6
+//2 = deg 135 = 3pi/4
+//3 = deg 120 = 2pi/3
+//4 = deg 90 = pi/2
+//5 = deg 60 = pi/3
+//6 = deg 45 = pi/4
+//7 = deg 30 = pi/6
+//8 = deg 0 = 0
+//converts into the sine of the angle to make acceleration calculation
+uint32_t sinAngle(uint16_t angle);
 
-//Cosine Table
-//Sine Table
-//cosin0 = cosin180 = 1;       //0
-//cosin10 = cosin170 = 0.985;
-//cosin20 = cosin160 = 0.939;
-//cosin30 = cosin150 = 0.866;    //pi/6
-//cosin40 = cosin140 = 0.766;
-//cosin45 = cosin135 = 0.707;  //pi/4
-//cosin50 = cosin130 = 0.642;
-//cosin60 = cosin120 = 0.5; //pi/3
-//cosin70 = cosin110 = 0.342;
-//cosin80 = cosin100 = 0.173;
-//cosin90 = 0.0;            //pi/2
-
-
-
+//converts into the cosine of the angle to make acceleration calculation
+int32_t cosAngle (uint16_t angle);
 
 
 #endif //LUNAR_LANDER_COMPUTATIONS_H
