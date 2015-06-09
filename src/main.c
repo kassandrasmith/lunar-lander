@@ -13,7 +13,7 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
 #include "../inc/debugging_utilities.h"
-#inlcude "../inc/computations.h"
+#include "../inc/computations.h"
 
 //declare global variables
 uint16_t score = 0;
@@ -187,7 +187,7 @@ void write_time(uint16_t time) {
 
 void draw_terrain(void) {
 
-    for(int i=0; i<130; i++) {
+    for(int i = 0; i < WIDTH; i++) {
         int terrainx = i;
         int terrainy = 10;
 

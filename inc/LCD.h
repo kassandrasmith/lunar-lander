@@ -4,10 +4,26 @@
 #define LUNAR_LANDER_LCD_H
 
 #define ST7735
+
+
 #ifdef ST7735
+#define WIDTH 128
+#define HEIGHT 160
+#define EIGHTBITCOLOR
+#endif
+
+#ifdef ILI9341
+#define WIDTH 240
+#define HEIGHT 320
+#define EIGHTBITCOLOR
+
+#endif
+
+#ifdef EIGHTBITCOLOR
 #define BLACK 0x0000
 #define WHITE 0xFFFF
 #endif
+
 
 void screen_init();
 void draw_bitmap(int16_t x, int16_t y, const uint16_t *image, int16_t w, int16_t h);
