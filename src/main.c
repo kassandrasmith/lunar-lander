@@ -13,6 +13,7 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
 #include "../inc/debugging_utilities.h"
+#inlcude "../inc/computations.h"
 
 //declare global variables
 uint16_t score = 0;
@@ -65,6 +66,7 @@ void process_input() {
     bool jetButtonPressed = GPIO_PORTE_DATA_R & (1 << 0);
     bool rightButtonPressed = GPIO_PORTE_DATA_R & (1 << 1);
     bool leftButtonPressed = GPIO_PORTE_DATA_R & (1 << 2);
+
     if (!noFuel & jetButtonPressed) {
         accel = -0.811;    //negative accelaration forces lander opposite gravity
         fuel--;             //using fuel
