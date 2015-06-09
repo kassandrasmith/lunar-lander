@@ -12,25 +12,24 @@
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
+#include "../inc/debugging_utilities.h"
 
 //declare global variables
-uint16_t score;
-uint16_t time;
+uint16_t score = 0;
+uint16_t time = 0;
 uint16_t fuel = 1234;
 char multiplier = 0; //To be used to increase score according to where the lander lands
 int ttime = 1; //TODO set to refresh rate
 //declare variables
 int16_t vvelocity;                  //can be negative if vertical position is increasing
-int16_t vaccel;                     //negative value causes increase in vertical position
+float accel;                     //negative value causes increase in vertical position
 int16_t hvelocity;                  //negative value moves left, positive moves right
 uint16_t altitude = 9;                //initialize to topmost of landscape-oriented screen
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 90;                 //0 points upwards
-int accel = 1;
 
 
 int main(void) {
-
     //Run initializations
     IntMasterDisable();
     DAC_Init();                                                 //Digital to analog converter necessary for sounds
@@ -40,7 +39,7 @@ int main(void) {
 
     // Trigger an interrupt every 30th of a second.
     // The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
-    SysTickPeriodSet(SysCtlClockGet()/30.0);
+    SysTickPeriodSet(SysCtlClockGet() / 30.0);
     SysTickEnable();
     SysTickIntRegister(game_loop);
     SysTickIntEnable();
@@ -55,9 +54,10 @@ int main(void) {
 }
 
 void game_loop() {
-    //update();
+    update();
     render();
-    
+    tick();
+    toggleLED(30);
 }
 
 void process_input() {
@@ -83,16 +83,14 @@ void process_input() {
 //update location and time
 void update (void){
     time++;
-    const float angle = 3.14/2.0;
-    const float accel = -0.5;
     float vaccel = sin(angle) * accel;
     float haccel = cos(angle) * accel;
 
     vvelocity += vaccel * ttime;
     hvelocity += haccel * ttime;
 
-    altitude += vvelocity * ttime;
-    xposit += hvelocity * ttime;
+    altitude += 0 * ttime;
+    xposit += 0 * ttime;
 }
 //"check" the things that will kill you
 void check (void){
@@ -103,7 +101,7 @@ void check (void){
     bool tooFast = vvelocity>=50;
     //check altitude
     if (crashed & tooFast) {
-        die(2);
+        die(CRASHED);
 
     } //(TODO)replace altitude check with terrain value check once terrain is generated
     if (crashed & (!tooFast)) {
@@ -114,7 +112,7 @@ void check (void){
     }
     //check time
     if (outOfTime) {
-        die(1);
+        die(OUTOFTIME);
     }
     if (angle == -1) {
         angle = 179;
@@ -165,22 +163,17 @@ void die(DeathType_t deathtype) {
     }
 
 void write_score(uint16_t score) {
-    draw_dec(score);
+    draw_dec(0, 0, score);
 }
 
 void write_fuel(uint16_t inFuel) {
-    draw_dec(inFuel);
+    draw_dec(0, 5, inFuel);
 }
 
 void write_time(uint16_t time) {
-    char min = time / 60;
-    draw_dec(min);
+    uint8_t min = (uint8_t) (time / 60);
+    draw_dec(3, 0, min);
 
-    uint8_t sec = (time - min * 60);
-    draw_dec(sec);
-}
-
-char to_ASCII(char num) {
-    num += 0x30;
-    return num;
+    uint8_t sec = time - min * 60;
+    draw_dec(4, 0, sec);
 }

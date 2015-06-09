@@ -1,13 +1,6 @@
 #include "../inc/LCD.h"
 #include "../inc/ST7735.h"
 
-#define ST7735
-
-#ifdef ST7735
-#define BLACK 0x0000
-#define WHITE 0xFFFF
-#endif
-
 void screen_init() {
 #ifdef ST7735
     ST7735_InitR(INITR_GREENTAB);
@@ -26,13 +19,15 @@ void fill_background(uint16_t color) {
 #endif
 }
 
-void draw_dec(uint32_t number) {
+void draw_dec(uint16_t x, uint16_t y, uint32_t number) {
 #ifdef ST7735
+    ST7735_SetCursor(x, y);
+    ST7735_SetTextColor(WHITE);
     ST7735_OutUDec(number);
 #endif
 }
 
-void draw_char(int16_t x, int16_t y, char c, int16_t textColor, int16_t bgColor, uint8_t size) {
+void draw_char(uint16_t x, uint16_t y, char c, int16_t textColor, int16_t bgColor, uint8_t size) {
 #ifdef ST7735
     ST7735_DrawChar(x, y, c, textColor, bgColor, size);
 #endif
