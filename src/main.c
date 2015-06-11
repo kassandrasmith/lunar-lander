@@ -29,6 +29,8 @@ uint16_t altitude = 9;                //initialize to topmost of landscape-orien
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                 //0 points upwards
 
+int storeTerrainX[130];
+int storeTerrainY[130];
 
 int main(void) {
     //Run initializations
@@ -190,7 +192,8 @@ void draw_terrain(void) {
     for(int i = 0; i < WIDTH; i++) {
         int terrainx = i;
         int terrainy = 10;
-
+        storeTerrainX[i]={terrainx};
+        storeTerrainY[i]={terrainy};
         draw_pixel(terrainx, terrainy, WHITE);
     }
 }
