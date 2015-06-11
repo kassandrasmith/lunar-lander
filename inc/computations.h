@@ -1,6 +1,8 @@
 #ifndef LUNAR_LANDER_COMPUTATIONS_H
 #define LUNAR_LANDER_COMPUTATIONS_H
 
+#include "stdint.h"
+
 //"angle" refers to a number from 0 to 8 which corresponds to steps on the unit circle
 //an "angle" of 0 corresponds to 180 degrees
 //an "angle" of 8 corresponds to 0 degrees.
@@ -15,10 +17,10 @@
 //7 = deg 30 = pi/6
 //8 = deg 0 = 0
 //converts into the sine of the angle to make acceleration calculation
-uint32_t sinAngle(uint16_t angle);
+float sinAngle(uint16_t angle);
 
 //converts into the cosine of the angle to make acceleration calculation
-int32_t cosAngle (uint16_t angle);
+float cosAngle (uint16_t angle);
 
 
 #endif //LUNAR_LANDER_COMPUTATIONS_H

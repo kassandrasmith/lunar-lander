@@ -15,6 +15,7 @@ void check(void);
 void render(void);
 void die(DeathType_t);
 void land(void);
+void draw_terrain(void);
 void write_score (uint16_t);
 void write_fuel (uint16_t);
 void write_time (uint16_t);
