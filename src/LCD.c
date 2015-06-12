@@ -33,13 +33,13 @@ void draw_char(uint16_t x, uint16_t y, char c, int16_t textColor, int16_t bgColo
 #endif
 }
 
-uint32_t draw_string(uint16_t x, uint16_t y, char *pt, int16_t textColor) {
+void draw_string(uint16_t x, uint16_t y, char *pt, int16_t textColor) {
 #ifdef ST7735
     ST7735_DrawString(x, y, pt, textColor);
 #endif
 }
 
-uint32_t draw_pixel(int16_t x, int16_t y, uint16_t color) {
+void draw_pixel(int16_t x, int16_t y, uint16_t color) {
 #ifdef ST7735
     ST7735_DrawPixel(x, y, color);
 #endif

@@ -28,6 +28,8 @@ int16_t hvelocity;                  //negative value moves left, positive moves 
 uint16_t altitude = 9;                //initialize to topmost of landscape-oriented screen
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                 //0 points upwards
+int thirtycount = 0;
+
 
 int storeTerrainX[WIDTH];
 int storeTerrainY[WIDTH];
@@ -66,6 +68,8 @@ void game_loop() {
     render();
     tick();
     toggleLED(30);      //Debugging heartbeat
+    thirtycount + 1;
+
 }
 
 void process_input() {
@@ -172,7 +176,7 @@ void land() {
 }
 
 void write_score(uint16_t score) {
-    draw_dec(0, 0, score);
+    draw_dec(0, 2, score);
 }
 
 void write_fuel(uint16_t inFuel) {
@@ -181,10 +185,10 @@ void write_fuel(uint16_t inFuel) {
 
 void write_time(uint16_t time) {
     uint8_t min = (uint8_t) (time / 60);
-    draw_dec(3, 0, min);
-    draw_string(4, 0, ":", WHITE);
+    draw_dec(3, 10, min);
+    draw_string(4, 10, ":", WHITE);
     uint8_t sec = time - min * 60;
-    draw_dec(5, 0, sec);
+    draw_dec(5, 10, sec);
 }
 
 void draw_terrain(void) {
@@ -192,8 +196,8 @@ void draw_terrain(void) {
     for(int i = 0; i < WIDTH; i++) {
         int terrainx = i;
         int terrainy = 10;
-        storeTerrainX[i]={terrainx};
-        storeTerrainY[i]={terrainy};
+        storeTerrainX[i] = terrainx;
+        storeTerrainY[i] = terrainy;
         draw_pixel(terrainx, terrainy, WHITE);
     }
 }

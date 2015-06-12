@@ -30,6 +30,8 @@ void draw_bitmap(int16_t x, int16_t y, const uint16_t *image, int16_t w, int16_t
 void fill_background(uint16_t color);
 void draw_dec(uint16_t x, uint16_t y, uint32_t number);
 void draw_char(uint16_t x, uint16_t y, char c, int16_t textColor, int16_t bgColor, uint8_t size);
-uint32_t draw_string(uint16_t x, uint16_t y, char *pt, int16_t textColor);
-uint32_t draw_pixel(int16_t x, int16_t y, uint16_t color);
+
+void draw_string(uint16_t x, uint16_t y, char *pt, int16_t textColor);
+
+void draw_pixel(int16_t x, int16_t y, uint16_t color);
 #endif //LUNAR_LANDER_LCD_H
