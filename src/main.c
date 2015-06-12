@@ -29,8 +29,8 @@ uint16_t altitude = 9;                //initialize to topmost of landscape-orien
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                 //0 points upwards
 
-int storeTerrainX[130];
-int storeTerrainY[130];
+int storeTerrainX[WIDTH];
+int storeTerrainY[WIDTH];
 
 int main(void) {
     //Run initializations

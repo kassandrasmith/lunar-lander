@@ -27,12 +27,12 @@ void PortF_Init(void) {
     //Port F initialization
     SYSCTL_RCGCGPIO_R |= 0x20;                      // enable clock for PORT F
     delay = SYSCTL_RCGCGPIO_R;                      // give the clock some time
-    GPIO_PORTF_AMSEL_R &= ~0x02;                    // disable analog function
+    GPIO_PORTF_AMSEL_R &= ~0x13;                    // disable analog function
     GPIO_PORTF_PCTL_R &= ~0x00000FFF;               // regular GPIO function
-    GPIO_PORTF_DIR_R |= 0x02;                       // make PF1 output
-    GPIO_PORTF_AFSEL_R &= ~0x02;                    // disable alt funct on PF1
-    GPIO_PORTF_DEN_R |= 0x02;                       // enable digital I/O on PF1
-    GPIO_PORTF_DR8R_R |= 0x02;                      // 8-mA drive control register
+    GPIO_PORTF_DIR_R |= 0x13;                       // make PF0, 1, 4 output
+    GPIO_PORTF_AFSEL_R &= ~0x13;                    // disable alt funct on PF0, 1, 4
+    GPIO_PORTF_DEN_R |= 0x13;                       // enable digital I/O on PF0, 1, 4
+    GPIO_PORTF_DR8R_R |= 0x13;                      // 8-mA drive control register
     GPIO_PORTF_PDR_R |= 0x02;                       // Pull down register for on board led
     GPIO_PORTF_PUR_R |= 0x10;                       // Pull up register for on board switch
     GPIO_PORTF_PUR_R |= 0x01;                       // Pull up register for on board switch
