@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+#include "../inc/buttons.h"
 #include "inc/tm4c123gh6pm.h"
 #include "../inc/LCD.h"
 #include "../inc/PLL.h"
@@ -15,10 +16,13 @@
 #include "../inc/debugging_utilities.h"
 #include "../inc/computations.h"
 
+#define FRAME_RATE 30
+
 //declare global variables
 uint16_t score = 0;
 uint16_t time = 0;
-uint16_t fuel = 1234;
+uint16_t seconds = 0;
+uint16_t fuel = 3000;
 char multiplier = 0; //To be used to increase score according to where the lander lands
 int ttime = 1; //TODO set to refresh rate
 //declare variables
@@ -28,8 +32,6 @@ int16_t hvelocity;                  //negative value moves left, positive moves 
 uint16_t altitude = 9;                //initialize to topmost of landscape-oriented screen
 uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                 //0 points upwards
-int thirtycount = 0;
-
 
 int storeTerrainX[WIDTH];
 int storeTerrainY[WIDTH];
@@ -42,6 +44,8 @@ int main(void) {
     //Digital to analog converter for sounds.
     //We utilize a 6 bit 2R styled DAC
     DAC_Init();
+
+    ButtonsInit();
     //Port F controls on-board buttons and LEDs which we use for debugging
     // (may not be necessary in later releases)
     PortF_Init();
@@ -50,7 +54,7 @@ int main(void) {
 
     // Trigger an interrupt every 30th of a second.
     // The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
-    SysTickPeriodSet(SysCtlClockGet() / 30.0);
+    SysTickPeriodSet(SysCtlClockGet() / (float)FRAME_RATE);
     SysTickEnable();
     SysTickIntRegister(game_loop);
     SysTickIntEnable();
@@ -64,19 +68,24 @@ int main(void) {
 }
 
 void game_loop() {
+    process_input();
     update();
     render();
     tick();
-    toggleLED(30);      //Debugging heartbeat
-    thirtycount + 1;
-
+    toggleLED(FRAME_RATE);      //Debugging heartbeat
 }
 
 void process_input() {
+    uint8_t buttonState = ButtonsPoll(0, 0);
     bool noFuel = fuel == 0;
     bool jetButtonPressed = GPIO_PORTE_DATA_R & (1 << 0);
     bool rightButtonPressed = GPIO_PORTE_DATA_R & (1 << 1);
     bool leftButtonPressed = GPIO_PORTE_DATA_R & (1 << 2);
+    #define ONBOARDBUTTONS
+    #ifdef ONBOARDBUTTONS
+        leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
+        rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
+    #endif
 
     if (!noFuel & jetButtonPressed) {
         accel = -0.811;    //negative accelaration forces lander opposite gravity
@@ -86,6 +95,7 @@ void process_input() {
         accel = 1.622;
     }
 
+    //FIXME: No bounds checking on angle
     if (leftButtonPressed) {
         angle--;
     }
@@ -111,7 +121,7 @@ void check (void){
     //declare boolean
     bool outOfTime = time >= 240;
     bool crashed = altitude < 0;
-    bool tooFast = vvelocity>=50;
+    bool tooFast = vvelocity >= 50;
     //check altitude
     if (crashed & tooFast) {
         die(CRASHED);
@@ -137,10 +147,15 @@ void check (void){
 
 void render (void) {
     write_score(score);
-    write_time(time);
+    if (time % FRAME_RATE == 0) {
+        write_time(seconds);
+        seconds++;
+    }
     write_fuel(fuel);
-
-    draw_bitmap(xposit, altitude, lander, 7, 9);
+    if(angle == 0) draw_bitmap(xposit, altitude, lander_left, 7, 9);
+    else {
+        draw_bitmap(xposit, altitude, lander, 7, 9);
+    }
     draw_terrain();
 }
 
@@ -183,11 +198,14 @@ void write_fuel(uint16_t inFuel) {
     draw_dec(0, 5, inFuel);
 }
 
-void write_time(uint16_t time) {
-    uint8_t min = (uint8_t) (time / 60);
+void write_time(uint16_t seconds) {
+    //FIXME: The seconds doesn't draw a leading zero for the tens place.
+    //This leads to strange behaviour at the start of a new minute
+    //FIXME: Doesn't handle over 10 minutes
+    uint8_t min = (uint8_t) (seconds / 60);
     draw_dec(3, 10, min);
     draw_string(4, 10, ":", WHITE);
-    uint8_t sec = time - min * 60;
+    uint8_t sec = seconds - min * 60;
     draw_dec(5, 10, sec);
 }
 

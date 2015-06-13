@@ -1,5 +1,19 @@
+#include <stdint.h>
+#include <stdbool.h>
 #include "../inc/initialization.h"
 #include "inc/tm4c123gh6pm.h"
+#include "driverlib/rom.h"
+
+#include "inc/hw_types.h"
+#include "inc/hw_memmap.h"
+#include "driverlib/rom_map.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+
+// GPIO_PIN_X is defined in gpio.h
+#define LED_RED GPIO_PIN_1
+#define LED_BLUE GPIO_PIN_2
+#define LED_GREEN GPIO_PIN_3
 
 //Initialize the Digital to Analog Converter (DAC) in order to produce sounds
 //We use a 6-bit R, 2R method DAC
@@ -25,17 +39,9 @@ void PortF_Init(void) {
     unsigned long volatile delay;
 
     //Port F initialization
-    SYSCTL_RCGCGPIO_R |= 0x20;                      // enable clock for PORT F
-    delay = SYSCTL_RCGCGPIO_R;                      // give the clock some time
-    GPIO_PORTF_AMSEL_R &= ~0x13;                    // disable analog function
-    GPIO_PORTF_PCTL_R &= ~0x00000FFF;               // regular GPIO function
-    GPIO_PORTF_DIR_R |= 0x13;                       // make PF0, 1, 4 output
-    GPIO_PORTF_AFSEL_R &= ~0x13;                    // disable alt funct on PF0, 1, 4
-    GPIO_PORTF_DEN_R |= 0x13;                       // enable digital I/O on PF0, 1, 4
-    GPIO_PORTF_DR8R_R |= 0x13;                      // 8-mA drive control register
-    GPIO_PORTF_PDR_R |= 0x02;                       // Pull down register for on board led
-    GPIO_PORTF_PUR_R |= 0x10;                       // Pull up register for on board switch
-    GPIO_PORTF_PUR_R |= 0x01;                       // Pull up register for on board switch
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     GPIO_PORTF_DATA_R |= 0x02;                      // Turns on the LED to notify user that initialization is successful
 }
 
