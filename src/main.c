@@ -13,6 +13,7 @@
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
 #include "../inc/debugging_utilities.h"
 #include "../inc/computations.h"
 
@@ -24,14 +25,22 @@ uint16_t time = 0;
 uint16_t seconds = 0;
 uint16_t fuel = 3000;
 char multiplier = 0; //To be used to increase score according to where the lander lands
-int ttime = 1; //TODO set to refresh rate
+float ttime = .01; //TODO set to refresh rate
 //declare variables
-int16_t vvelocity;                  //can be negative if vertical position is increasing
-float accel;                     //negative value causes increase in vertical position
-int16_t hvelocity;                  //negative value moves left, positive moves right
-uint16_t altitude = 9;                //initialize to topmost of landscape-oriented screen
-uint16_t xposit = 64;                //initialize to middle of landscape-oriented screen
+float yvelocity;                  //can be negative if vertical position is increasing
+float xvelocity;                  //negative value moves left, positive moves right
+float yposit = 9;                //initialize to topmost of landscape-oriented screen
+float xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                 //0 points upwards
+float accel;                     //negative value causes increase in vertical position
+
+
+int oldxposit;
+int oldyposit;
+int landerx;
+int landery;
+
+
 
 int storeTerrainX[WIDTH];
 int storeTerrainY[WIDTH];
@@ -44,6 +53,8 @@ int main(void) {
     //Digital to analog converter for sounds.
     //We utilize a 6 bit 2R styled DAC
     DAC_Init();
+
+    PortE_Init();
 
     ButtonsInit();
     //Port F controls on-board buttons and LEDs which we use for debugging
@@ -70,18 +81,21 @@ int main(void) {
 void game_loop() {
     process_input();
     update();
+    check();
     render();
     tick();
     toggleLED(FRAME_RATE);      //Debugging heartbeat
 }
 
 void process_input() {
+
     uint8_t buttonState = ButtonsPoll(0, 0);
     bool noFuel = fuel == 0;
+
     bool jetButtonPressed = GPIO_PORTE_DATA_R & (1 << 0);
     bool rightButtonPressed = GPIO_PORTE_DATA_R & (1 << 1);
     bool leftButtonPressed = GPIO_PORTE_DATA_R & (1 << 2);
-    #define ONBOARDBUTTONS
+#define ONBOARDBUTTONS
     #ifdef ONBOARDBUTTONS
         leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
         rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
@@ -94,13 +108,17 @@ void process_input() {
     if (noFuel | !jetButtonPressed) {
         accel = 1.622;
     }
-
-    //FIXME: No bounds checking on angle
     if (leftButtonPressed) {
         angle--;
     }
     if (rightButtonPressed) {
         angle++;
+    }
+    if (angle <= -1) {
+        angle = 0;
+    }
+    if (angle >= 9) {
+        angle = 8;
     }
 }
 //update location and time
@@ -109,40 +127,35 @@ void update (void){
     float vaccel = sinAngle(angle) * accel;
     float haccel = cosAngle(angle) * accel;
 
-    vvelocity += vaccel * ttime;
-    hvelocity += haccel * ttime;
+    yvelocity += vaccel * ttime;
+    xvelocity += haccel * ttime;
 
-    altitude += 0 * ttime;
-    xposit += 0 * ttime;
+    yposit += yvelocity * ttime;
+    xposit += xvelocity * ttime;
 }
 //"check" the things that will kill you
 void check (void){
 
     //declare boolean
     bool outOfTime = time >= 240;
-    bool crashed = altitude < 0;
-    bool tooFast = vvelocity >= 50;
-    //check altitude
+    bool crashed = yposit < 0;
+    bool tooFast = yvelocity >= 50;
+    //check yposit
     if (crashed & tooFast) {
         die(CRASHED);
 
-    } //(TODO)replace altitude check with terrain value check once terrain is generated
+    } //(TODO)replace yposit check with terrain value check once terrain is generated
     if (crashed & (!tooFast)) {
         land();
     }
-    if (altitude >= 128) {
-        altitude = 128;     //TODO figure out how we want to handle the lander at the edges of the screen
+    if (yposit >= 128) {
+        yposit = 128;     //TODO figure out how we want to handle the lander at the edges of the screen
     }
     //check time
     if (outOfTime) {
         die(OUTOFTIME);
     }
-    if (angle <= -1) {
-        angle = 0;
-    }
-    if (angle >= 9) {
-        angle = 8;
-    }
+
 }
 
 void render (void) {
@@ -152,10 +165,19 @@ void render (void) {
         seconds++;
     }
     write_fuel(fuel);
-    if(angle == 0) draw_bitmap(xposit, altitude, lander_left, 7, 9);
-    else {
-        draw_bitmap(xposit, altitude, lander, 7, 9);
+    oldxposit = xposit;
+    oldyposit = yposit;
+    if (angle == 0) {
+        draw_bitmap(xposit, yposit, lander_left, 9, 7);
+        landerx = 9;
+        landery = 7;
     }
+    else {
+        draw_bitmap(xposit, yposit, lander, 7, 9);
+        landerx = 7;
+        landery = 9;
+    }
+    refresh();
     draw_terrain();
 }
 
@@ -219,3 +241,8 @@ void draw_terrain(void) {
         draw_pixel(terrainx, terrainy, WHITE);
     }
 }
+
+void refresh(void) {
+    draw_bitmap(oldxposit, oldyposit, black, landerx, 1);
+}
+

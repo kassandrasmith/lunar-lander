@@ -45,3 +45,7 @@ void PortF_Init(void) {
     GPIO_PORTF_DATA_R |= 0x02;                      // Turns on the LED to notify user that initialization is successful
 }
 
+void PortE_Init(void) {
+    unsigned long volatile delay;
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+}
