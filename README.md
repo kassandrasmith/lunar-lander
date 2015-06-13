@@ -40,5 +40,5 @@ TWROOT = /Applications/arm/TivaWare
 
 Lines number 1576-1580 in the provided ST7735.c file are unecessary and will prevent you from building. You should delete them or comment them out.
 
-Run `make; make upload;` to build and flash the code to a connected board.
+Run `make; make upload;` to build and flash the code to a connected board. 'make silent' will suppress warnings.
 
