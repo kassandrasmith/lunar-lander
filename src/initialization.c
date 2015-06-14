@@ -48,4 +48,5 @@ void PortF_Init(void) {
 void PortE_Init(void) {
     unsigned long volatile delay;
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, 1);
 }

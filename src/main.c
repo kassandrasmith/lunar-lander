@@ -25,7 +25,7 @@ uint16_t time = 0;
 uint16_t seconds = 0;
 uint16_t fuel = 3000;
 char multiplier = 0; //To be used to increase score according to where the lander lands
-float ttime = .01; //TODO set to refresh rate
+float ttime = .09; //TODO set to refresh rate
 //declare variables
 float yvelocity;                  //can be negative if vertical position is increasing
 float xvelocity;                  //negative value moves left, positive moves right
@@ -40,9 +40,6 @@ int oldyposit;
 int landerx;
 int landery;
 
-
-
-int storeTerrainX[WIDTH];
 int storeTerrainY[WIDTH];
 
 int main(void) {
@@ -62,6 +59,7 @@ int main(void) {
     PortF_Init();
     screen_init();
     FPUStackingEnable();
+    draw_terrain();
 
     // Trigger an interrupt every 30th of a second.
     // The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
@@ -87,20 +85,20 @@ void game_loop() {
     toggleLED(FRAME_RATE);      //Debugging heartbeat
 }
 
-void process_input() {
+void process_input(void) {
 
     uint8_t buttonState = ButtonsPoll(0, 0);
     bool noFuel = fuel == 0;
 
-    bool jetButtonPressed = GPIO_PORTE_DATA_R & (1 << 0);
-    bool rightButtonPressed = GPIO_PORTE_DATA_R & (1 << 1);
-    bool leftButtonPressed = GPIO_PORTE_DATA_R & (1 << 2);
-#define ONBOARDBUTTONS
+    bool jetButtonPressed = GPIO_PORTE_DATA_R & (1 << 1);
+    bool rightButtonPressed = GPIO_PORTE_DATA_R & (1 << 2);
+    bool leftButtonPressed = GPIO_PORTE_DATA_R & (1 << 0);
+/*    #define ONBOARDBUTTONS
     #ifdef ONBOARDBUTTONS
         leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
         rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
     #endif
-
+*/
     if (!noFuel & jetButtonPressed) {
         accel = -0.811;    //negative accelaration forces lander opposite gravity
         fuel--;             //using fuel
@@ -135,27 +133,24 @@ void update (void){
 }
 //"check" the things that will kill you
 void check (void){
-
     //declare boolean
-    bool outOfTime = time >= 240;
-    bool crashed = yposit < 0;
-    bool tooFast = yvelocity >= 50;
-    //check yposit
-    if (crashed & tooFast) {
-        die(CRASHED);
+    bool outOfTime = seconds >= 240;
+    bool crashed = detect_collision();
+    // (int)yposit >= 120;
+    bool tooFast = (int) yvelocity >= 50;
 
-    } //(TODO)replace yposit check with terrain value check once terrain is generated
-    if (crashed & (!tooFast)) {
+    //check yposit
+    if (crashed && tooFast) {
+        die(CRASHED);
+    }
+    if (crashed && (!tooFast)) {
         land();
     }
-    if (yposit >= 128) {
-        yposit = 128;     //TODO figure out how we want to handle the lander at the edges of the screen
-    }
+
     //check time
     if (outOfTime) {
         die(OUTOFTIME);
     }
-
 }
 
 void render (void) {
@@ -178,17 +173,19 @@ void render (void) {
         landery = 9;
     }
     refresh();
-    draw_terrain();
+
 }
 
 //Output some sort of death message
 void die(DeathType_t deathtype) {
-
+    //fill_background(BLACK);
+    xvelocity = 0;
+    yvelocity = 0;
     draw_string(40, 0, "You died!", WHITE);
     switch (deathtype) {
         case CRASHED:
             draw_string(40, 40, "Lost 20 fuel units.", WHITE);
-            fuel =- 20;
+            fuel = -20;
             draw_string(40, 60, "Fuel left:", WHITE);
             write_fuel(fuel);
             draw_string(40, 80, "Current score:", WHITE);
@@ -198,51 +195,74 @@ void die(DeathType_t deathtype) {
             draw_string(40, 40, "Out of time!", WHITE);
             draw_string(40, 60, "Final score:", WHITE);
             write_score(score);
-            //TODO write a slight delay
             break;
     }
+
 }
 
-void land() {
-        draw_string(40, 20, "You landed!", WHITE);
+void land(void) {
+    fill_background(BLACK);
+    xvelocity = 0;
+    yvelocity = 0;
+    oldxposit = 0;
+    draw_string(6, 6, "You landed!", WHITE);
     if(fuel>0){
-        draw_string(40, 40, "Fuel remaining:", WHITE);
+        draw_string(6, 7, "Fuel remaining:", WHITE);
         write_fuel(fuel);
         //TODO write a slight delay
     }
 }
 
 void write_score(uint16_t score) {
-    draw_dec(0, 2, score);
+    draw_string(0, 0, "s:", WHITE);
+    draw_dec(2, 0, score);
 }
 
 void write_fuel(uint16_t inFuel) {
-    draw_dec(0, 5, inFuel);
+    draw_string(0, 1, "f:", WHITE);
+    draw_dec(2, 1, inFuel);
 }
 
 void write_time(uint16_t seconds) {
     //FIXME: The seconds doesn't draw a leading zero for the tens place.
     //This leads to strange behaviour at the start of a new minute
+    draw_string(0, 2, "t:", WHITE);
+
     //FIXME: Doesn't handle over 10 minutes
     uint8_t min = (uint8_t) (seconds / 60);
-    draw_dec(3, 10, min);
-    draw_string(4, 10, ":", WHITE);
+    draw_dec(2, 2, min);
+    draw_string(3, 2, ":", WHITE);
     uint8_t sec = seconds - min * 60;
-    draw_dec(5, 10, sec);
+    if (sec < 10) {
+        draw_dec(4, 2, 0);
+        draw_dec(5, 2, sec);
+    }
+    else {
+        draw_dec(4, 2, sec);
+    }
 }
 
 void draw_terrain(void) {
 
-    for(int i = 0; i < WIDTH; i++) {
-        int terrainx = i;
-        int terrainy = 10;
-        storeTerrainX[i] = terrainx;
+    for (uint16_t i = 0; i < WIDTH; i++) {
+        int terrainy = 140;
         storeTerrainY[i] = terrainy;
-        draw_pixel(terrainx, terrainy, WHITE);
+        draw_pixel(i, terrainy, WHITE);
     }
 }
 
 void refresh(void) {
-    draw_bitmap(oldxposit, oldyposit, black, landerx, 1);
+    draw_bitmap(oldxposit, oldyposit, black, (landerx + 5), 1);
 }
 
+int newterrainy;
+
+bool detect_collision(void) {
+    for (int i = 0; i < WIDTH; i++) {
+        newterrainy = storeTerrainY[i];
+        if ((xposit == i) & (yposit >= newterrainy)) {
+            return true;
+        }
+    }
+    return false;
+}
