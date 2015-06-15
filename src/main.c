@@ -42,6 +42,7 @@ int landery;
 
 int storeTerrainY[WIDTH];
 
+//TODO fix the refresh of the lander so the upright lander doesn't override the current lander
 int main(void) {
     //Run initializations
     //Interrupts must be disabled here to prevent them
