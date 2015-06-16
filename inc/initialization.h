@@ -9,5 +9,6 @@ void DAC_Init(void);
 //Initializes PORT F, on board LEDs and switches
 void PortF_Init(void);
 
+void PortE_Init(void);
 
 #endif

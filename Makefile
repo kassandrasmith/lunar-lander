@@ -57,6 +57,20 @@ CFLAGS=-g                  \
        -I${TWROOT}           \
        -DTARGET_IS_BLIZZARD_RB1 \
 
+SILENTCFLAGS=-g                  \
+       -c                  \
+       -mthumb             \
+       ${CPU}              \
+       ${FPU}              \
+       -ffunction-sections \
+       -fdata-sections     \
+       -MD                 \
+       -std=c99            \
+       -DPART_${PART}      \
+       -Os                 \
+       -I${TWROOT}           \
+       -DTARGET_IS_BLIZZARD_RB1 \
+
 # Linker flags
 LDFLAGS=--entry ResetISR   \
 	--gc-sections      \
@@ -78,7 +92,6 @@ LIBM_PATH=${shell ${CC} ${CFLAGS} -print-file-name=libm.a}
 # Files
 SRC = ${wildcard src/*.c} ${EXTERN_FILES}
 OBJS = ${SRC:.c=.o}
-
 OBJS_NAMES = $(notdir ${OBJS})
 
 
@@ -86,6 +99,10 @@ OBJS_NAMES = $(notdir ${OBJS})
 # Rules
 # ----------------------------------------------------------------------------------------------------
 all: ${OBJS} ${FILENAME}.axf ${FILENAME}
+
+silent: CFLAGS=${SILENTCFLAGS}
+
+silent: ${OBJS} ${FILENAME}.axf ${FILENAME}
 
 %.o: %.c ${EXTERN_FILES}
 	@echo Compiling ${<}...
