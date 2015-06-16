@@ -33,7 +33,7 @@ float yposit = 9;                //initialize to topmost of landscape-oriented s
 float xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                 //0 points upwards
 float accel;                     //negative value causes increase in vertical position
-
+unsigned short lander;
 
 int oldxposit;
 int oldyposit;
@@ -164,11 +164,25 @@ void render (void) {
     oldxposit = xposit;
     oldyposit = yposit;
     if (angle == 0) {
-        draw_bitmap(xposit, yposit, lander_left, 9, 7);
+        lander = landerLeft;
+        draw_bitmap(xposit, yposit, lander, 9, 7);
+        landerx = 9;
+        landery = 7;
+    }
+    if (angle == 4) {
+        lander = landerUp;
+        draw_bitmap(xposit, yposit, lander, 7, 9);
+        landerx = 7;
+        landery = 9;
+    }
+    if (angle == 8) {
+        lander = landerRight;
+        draw_bitmap(xposit, yposit, lander, 9, 7);
         landerx = 9;
         landery = 7;
     }
     else {
+        lander = landerUp;
         draw_bitmap(xposit, yposit, lander, 7, 9);
         landerx = 7;
         landery = 9;
