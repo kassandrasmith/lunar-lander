@@ -18,8 +18,7 @@ DAC Resistor Value | Pin
 8*R | PB2
 4*R |
 2*R | PB4
-1*R | PB5
-
+1*R | PB
 ST7735 Screen | Pin
 ------|-----------------
 Backlight | +3.3 V
