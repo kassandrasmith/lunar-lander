@@ -25,7 +25,7 @@ uint16_t time = 0;
 uint16_t seconds = 0;
 uint16_t fuel = 3000;
 char multiplier = 0; //To be used to increase score according to where the lander lands
-float ttime = .09; //TODO set to refresh rate
+float ttime = .07; //TODO set to refresh rate
 //declare variables
 float yvelocity;                  //can be negative if vertical position is increasing
 float xvelocity;                  //negative value moves left, positive moves right
@@ -33,12 +33,14 @@ float yposit = 9;                //initialize to topmost of landscape-oriented s
 float xposit = 64;                //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                 //0 points upwards
 float accel;                     //negative value causes increase in vertical position
+int noSystick = 0;
 
-
-int oldxposit;
-int oldyposit;
+float oldxposit;
+float oldyposit;
 int landerx;
 int landery;
+
+unsigned short lander;
 
 int storeTerrainY[WIDTH];
 
@@ -51,17 +53,14 @@ int main(void) {
     //Digital to analog converter for sounds.
     //We utilize a 6 bit 2R styled DAC
     DAC_Init();
-
     PortE_Init();
-
     ButtonsInit();
     //Port F controls on-board buttons and LEDs which we use for debugging
     // (may not be necessary in later releases)
     PortF_Init();
     screen_init();
     FPUStackingEnable();
-    draw_terrain();
-
+    start_screen();
     // Trigger an interrupt every 30th of a second.
     // The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
     SysTickPeriodSet(SysCtlClockGet() / (float)FRAME_RATE);
@@ -84,6 +83,17 @@ void game_loop() {
     render();
     tick();
     toggleLED(FRAME_RATE);      //Debugging heartbeat
+    if (noSystick == 1) {
+        while (true) {
+            bool buttonPressed = GPIO_PORTE_DATA_R & (1 << 1) || GPIO_PORTE_DATA_R & (1 << 2) ||
+                                 GPIO_PORTE_DATA_R & (1 << 0);
+            if (buttonPressed) {
+                noSystick = 0;
+                start_screen();
+                return;
+            }
+        }
+    }
 }
 
 void process_input(void) {
@@ -152,6 +162,13 @@ void check (void){
     if (outOfTime) {
         die(OUTOFTIME);
     }
+
+    if (xposit >= 128) {
+        xposit = 0;
+    }
+    if (xposit <= 0) {
+        xposit = 128;
+    }
 }
 
 void render (void) {
@@ -164,15 +181,21 @@ void render (void) {
     oldxposit = xposit;
     oldyposit = yposit;
     if (angle == 0) {
-        draw_bitmap(xposit, yposit, lander_left, 9, 7);
+        draw_bitmap(xposit, yposit, landerLeft, 9, 7);
         landerx = 9;
         landery = 7;
     }
-    else {
-        draw_bitmap(xposit, yposit, lander, 7, 9);
+    if (angle > 0 && angle <= 4) {
+        draw_bitmap(xposit, yposit, landerUp, 7, 9);
         landerx = 7;
         landery = 9;
     }
+    if (angle > 4 && angle <= 8) {
+        draw_bitmap(xposit, yposit, landerRight, 9, 7);
+        landerx = 9;
+        landery = 7;
+    }
+    //TODO add other landers and other angle cases
     refresh();
 
 }
@@ -202,7 +225,7 @@ void die(DeathType_t deathtype) {
 }
 
 void land(void) {
-    fill_background(BLACK);
+    // fill_background(BLACK);
     xvelocity = 0;
     yvelocity = 0;
     oldxposit = 0;
@@ -212,6 +235,7 @@ void land(void) {
         write_fuel(fuel);
         //TODO write a slight delay
     }
+    noSystick = 1;
 }
 
 void write_score(uint16_t score) {
@@ -253,7 +277,9 @@ void draw_terrain(void) {
 }
 
 void refresh(void) {
-    draw_bitmap(oldxposit, oldyposit, black, (landerx + 5), 1);
+    draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 3);
+    draw_bitmap(oldxposit - 2, oldyposit, black, 1, landery + 2);
+    draw_bitmap(oldxposit + 10, oldyposit, black, 1, landery + 2);
 }
 
 int newterrainy;
@@ -261,9 +287,17 @@ int newterrainy;
 bool detect_collision(void) {
     for (int i = 0; i < WIDTH; i++) {
         newterrainy = storeTerrainY[i];
-        if ((xposit == i) & (yposit >= newterrainy)) {
+        if ((xposit >= i - 5) && (xposit <= i + 5) && (yposit >= newterrainy)) {
             return true;
         }
     }
     return false;
+}
+
+void start_screen(void) {
+    xposit = 64;
+    yposit = 9;
+    fill_background(BLACK);
+    draw_terrain();
+
 }
