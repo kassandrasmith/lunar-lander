@@ -34,13 +34,13 @@ float xposit = 64;                //initialize to middle of landscape-oriented s
 uint16_t angle = 4;                 //0 points upwards
 float accel;                     //negative value causes increase in vertical position
 int noSystick = 0;
+unsigned short lander;
 
 float oldxposit;
 float oldyposit;
+
 int landerx;
 int landery;
-
-unsigned short lander;
 
 int storeTerrainY[WIDTH];
 
