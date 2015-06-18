@@ -34,19 +34,23 @@ float yposit = 9;                //initialize to topmost of landscape-oriented s
 float xposit = 64;                //initialize to middle of landscape-oriented screen
 int16_t angle = 4;                 //0 points upwards
 float accel;                     //negative value causes increase in vertical position
-int noSystick = 0;
+int endGame = 0;
+int startGame = 1;
+int playGame = 0;
 unsigned short lander;
-
 float oldxposit;
 float oldyposit;
-
 int landerx;
 int landery;
-
 int storeTerrainY[WIDTH];
+
+bool buttonPressed = GPIO_PORTE_DATA_R & (1 << 1) || GPIO_PORTE_DATA_R & (1 << 2) ||
+                     GPIO_PORTE_DATA_R & (1 << 0);
+
 
 //TODO fix the refresh of the lander so the upright lander doesn't override the current lander
 int main(void) {
+
     //Run initializations
     //Interrupts must be disabled here to prevent them
     //from triggering during an initialization
@@ -78,232 +82,248 @@ int main(void) {
 }
 
 void game_loop() {
-    process_input();
-    update();
-    check();
-    render();
-    tick();
-    toggleLED(FRAME_RATE);      //Debugging heartbeat
-    if (noSystick == 1) {
-        while (true) {
-            bool buttonPressed = GPIO_PORTE_DATA_R & (1 << 1) || GPIO_PORTE_DATA_R & (1 << 2) ||
-                                 GPIO_PORTE_DATA_R & (1 << 0);
-            if (buttonPressed) {
-                noSystick = 0;
-                start_screen();
-                return;
-            }
+
+    bool inEndMode = endGame == 1;
+    bool inStartMode = startGame == 1;
+    bool inGameMode = playGame == 1;
+
+    if (inStartMode) {
+        start_screen();
+        check();
+        startGame = 0;
+        playGame = 1;
+    }
+    else if (inGameMode) {
+        process_input();
+        update();
+        check();
+        render();
+        tick();
+        toggleLED(FRAME_RATE);      //Debugging heartbeat
+
+    }
+    else if (inEndMode) {
+        process_input();
+        check();
+        tick();
+        toggleLED(FRAME_RATE);      //Debugging heartbeat
+
+        if (buttonPressed) {
+            endGame = 0;
+            playGame = 1;
+            start_screen();
         }
     }
 }
 
-void process_input(void) {
-    bool noFuel = fuel == 0;
+    void process_input(void) {
+        bool noFuel = fuel == 0;
 
-    bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
-    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
-    bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
+        bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
+        bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
+        bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
 
-    #define ONBOARDBUTTONS
-    #ifdef ONBOARDBUTTONS
+#define ONBOARDBUTTONS
+#ifdef ONBOARDBUTTONS
         uint8_t buttonState = ButtonsPoll(0, 0);
         leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
         rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
-    #endif
+#endif
 
-    if (!noFuel & jetButtonPressed) {
-        accel = -1.5;    //negative accelaration forces lander opposite gravity
-        fuel--;             //using fuel
-    }
-    if (noFuel | !jetButtonPressed) {
-        accel = 1.0;
-    }
-    if (leftButtonPressed) {
-        angle--;
-    }
-    if (rightButtonPressed) {
-        angle++;
-    }
-    if (angle <= -1) {
-        angle = 0;
-    }
-    if (angle >= 9) {
-        angle = 8;
-    }
-}
-//update location and time
-void update (void){
-    time++;
-    float vaccel = sinAngle(angle) * accel;
-    float haccel = cosAngle(angle) * accel;
-
-    yvelocity += vaccel * ttime;
-    xvelocity += haccel * ttime;
-
-    yposit += yvelocity * ttime;
-    xposit += xvelocity * ttime;
-}
-//"check" the things that will kill you
-void check (void){
-    //declare boolean
-    bool outOfTime = seconds >= 240;
-    bool collided = detect_collision();
-    bool tooFast = yvelocity >= -1;
-    bool crashed = collided && ((angle != 4) || tooFast);
-
-    //check yposit
-    if (crashed) {
-        die(CRASHED);
-    }
-    if (collided && !crashed) {
-        land();
-    }
-
-    //check time
-    if (outOfTime) {
-        die(OUTOFTIME);
-    }
-
-    if (xposit >= 128) {
-        xposit = 0;
-    }
-    if (xposit <= 0) {
-        xposit = 128;
-    }
-}
-
-void render (void) {
-    write_score(score);
-    if (time % FRAME_RATE == 0) {
-        write_time(seconds);
-        seconds++;
-    }
-    write_fuel(fuel);
-    write_velocities(xvelocity, yvelocity);
-    oldxposit = xposit;
-    oldyposit = yposit;
-    if (angle == 0) {
-        draw_bitmap(xposit, yposit, landerLeft, 9, 7);
-        landerx = 9;
-        landery = 7;
-    } else if (angle <= 4) {
-        draw_bitmap(xposit, yposit, landerUp, 7, 9);
-        landerx = 7;
-        landery = 9;
-    } else {
-        draw_bitmap(xposit, yposit, landerRight, 9, 7);
-        landerx = 9;
-        landery = 7;
-    }
-    //TODO add other landers and other angle cases
-    refresh();
-
-}
-
-//Output some sort of death message
-void die(DeathType_t deathtype) {
-    //fill_background(BLACK);
-    xvelocity = 0;
-    yvelocity = 0;
-    draw_string(1, 0, "You died!", WHITE);
-    switch (deathtype) {
-        case CRASHED:
-            draw_string(4, 4, "Lost 20 fuel units.", WHITE);
-            fuel = -20;
-            draw_string(4, 6, "Fuel left:", WHITE);
-            write_fuel(fuel);
-            draw_string(4, 8, "Current score:", WHITE);
-            write_score(score);
-            break;
-        case OUTOFTIME:
-            draw_string(4, 4, "Out of time!", WHITE);
-            draw_string(4, 6, "Final score:", WHITE);
-            write_score(score);
-            break;
-    }
-
-}
-
-void land(void) {
-    // fill_background(BLACK);
-    xvelocity = 0;
-    yvelocity = 0;
-    oldxposit = 0;
-    draw_string(6, 6, "You landed!", WHITE);
-    if(fuel>0){
-        draw_string(6, 7, "Fuel remaining:", WHITE);
-        write_fuel(fuel);
-    }
-    noSystick = 1;
-}
-
-void write_score(uint16_t score) {
-    draw_string(0, 0, "s:", WHITE);
-    draw_dec(2, 0, score);
-}
-
-void write_fuel(uint16_t inFuel) {
-    draw_string(0, 1, "f:", WHITE);
-    draw_dec(2, 1, inFuel);
-}
-
-void write_velocities(float xvel, float yvel) {
-    draw_string(0, 3, "xv:", WHITE);
-    draw_dec(3, 3, (uint32_t)(xvel * 1000000u));
-    draw_string(0, 4, "yv:", WHITE);
-    draw_dec(3, 4, (uint32_t)(yvel *10000u));
-}
-
-void write_time(uint16_t seconds) {
-    //FIXME: The seconds doesn't draw a leading zero for the tens place.
-    //This leads to strange behaviour at the start of a new minute
-    draw_string(0, 2, "t:", WHITE);
-
-    //FIXME: Doesn't handle over 10 minutes
-    uint8_t min = (uint8_t) (seconds / 60);
-    draw_dec(2, 2, min);
-    draw_string(3, 2, ":", WHITE);
-    uint8_t sec = seconds - min * 60;
-    if (sec < 10) {
-        draw_dec(4, 2, 0);
-        draw_dec(5, 2, sec);
-    }
-    else {
-        draw_dec(4, 2, sec);
-    }
-}
-
-void draw_terrain(void) {
-
-    for (uint16_t i = 0; i < WIDTH; i++) {
-        int terrainy = 140;
-        storeTerrainY[i] = terrainy;
-        draw_pixel(i, terrainy, WHITE);
-    }
-}
-
-void refresh(void) {
-    draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 3);
-    draw_bitmap(oldxposit - 2, oldyposit, black, 1, landery + 2);
-    draw_bitmap(oldxposit + 10, oldyposit, black, 1, landery + 2);
-}
-
-int newterrainy;
-
-bool detect_collision(void) {
-    for (int i = 0; i < WIDTH; i++) {
-        newterrainy = storeTerrainY[i];
-        if ((xposit >= i - 5) && (xposit <= i + 5) && (yposit >= newterrainy)) {
-            return true;
+        if (!noFuel & jetButtonPressed) {
+            accel = -1.5;    //negative accelaration forces lander opposite gravity
+            fuel--;             //using fuel
+        }
+        if (noFuel | !jetButtonPressed) {
+            accel = 1.0;
+        }
+        if (leftButtonPressed) {
+            angle--;
+        }
+        if (rightButtonPressed) {
+            angle++;
+        }
+        if (angle <= -1) {
+            angle = 0;
+        }
+        if (angle >= 9) {
+            angle = 8;
         }
     }
-    return false;
-}
+//update location and time
+    void update(void) {
+        time++;
+        float vaccel = sinAngle(angle) * accel;
+        float haccel = cosAngle(angle) * accel;
 
-void start_screen(void) {
-    xposit = 64;
-    yposit = 9;
-    fill_background(BLACK);
-    draw_terrain();
+        yvelocity += vaccel * ttime;
+        xvelocity += haccel * ttime;
 
-}
+        yposit += yvelocity * ttime;
+        xposit += xvelocity * ttime;
+    }
+//"check" the things that will kill you
+    void check(void) {
+        //declare boolean
+        bool outOfTime = seconds >= 240;
+        bool collided = detect_collision();
+        bool tooFast = yvelocity >= -1;
+        bool crashed = collided && ((angle != 4) || tooFast);
+
+        //check yposit
+        if (crashed) {
+            die(CRASHED);
+        }
+        if (collided && !crashed) {
+            land();
+        }
+
+        //check time
+        if (outOfTime) {
+            die(OUTOFTIME);
+        }
+
+        if (xposit >= 128) {
+            xposit = 0;
+        }
+        if (xposit <= 0) {
+            xposit = 128;
+        }
+    }
+
+    void render(void) {
+        write_score(score);
+        if (time % FRAME_RATE == 0) {
+            write_time(seconds);
+            seconds++;
+        }
+        write_fuel(fuel);
+        write_velocities(xvelocity, yvelocity);
+        oldxposit = xposit;
+        oldyposit = yposit;
+        if (angle == 0) {
+            draw_bitmap(xposit, yposit, landerLeft, 9, 7);
+            landerx = 9;
+            landery = 7;
+        } else if (angle <= 4) {
+            draw_bitmap(xposit, yposit, landerUp, 7, 9);
+            landerx = 7;
+            landery = 9;
+        } else {
+            draw_bitmap(xposit, yposit, landerRight, 9, 7);
+            landerx = 9;
+            landery = 7;
+        }
+        //TODO add other landers and other angle cases
+        refresh();
+
+    }
+
+//Output some sort of death message
+    void die(DeathType_t deathtype) {
+        //fill_background(BLACK);
+        xvelocity = 0;
+        yvelocity = 0;
+        draw_string(1, 0, "You died!", WHITE);
+        switch (deathtype) {
+            case CRASHED:
+                draw_string(4, 4, "Lost 20 fuel units.", WHITE);
+                fuel = -20;
+                draw_string(4, 6, "Fuel left:", WHITE);
+                write_fuel(fuel);
+                draw_string(4, 8, "Current score:", WHITE);
+                write_score(score);
+                break;
+            case OUTOFTIME:
+                draw_string(4, 4, "Out of time!", WHITE);
+                draw_string(4, 6, "Final score:", WHITE);
+                write_score(score);
+                break;
+        }
+
+    }
+
+    void land(void) {
+        // fill_background(BLACK);
+        xvelocity = 0;
+        yvelocity = 0;
+        oldxposit = 0;
+        draw_string(6, 6, "You landed!", WHITE);
+        if (fuel > 0) {
+            draw_string(6, 7, "Fuel remaining:", WHITE);
+            write_fuel(fuel);
+        }
+        endGame = 1;
+    }
+
+    void write_score(uint16_t score) {
+        draw_string(0, 0, "s:", WHITE);
+        draw_dec(2, 0, score);
+    }
+
+    void write_fuel(uint16_t inFuel) {
+        draw_string(0, 1, "f:", WHITE);
+        draw_dec(2, 1, inFuel);
+    }
+
+    void write_velocities(float xvel, float yvel) {
+        draw_string(0, 3, "xv:", WHITE);
+        draw_dec(3, 3, (uint32_t) (xvel * 1000000u));
+        draw_string(0, 4, "yv:", WHITE);
+        draw_dec(3, 4, (uint32_t) (yvel * 10000u));
+    }
+
+    void write_time(uint16_t seconds) {
+        //FIXME: The seconds doesn't draw a leading zero for the tens place.
+        //This leads to strange behaviour at the start of a new minute
+        draw_string(0, 2, "t:", WHITE);
+
+        //FIXME: Doesn't handle over 10 minutes
+        uint8_t min = (uint8_t) (seconds / 60);
+        draw_dec(2, 2, min);
+        draw_string(3, 2, ":", WHITE);
+        uint8_t sec = seconds - min * 60;
+        if (sec < 10) {
+            draw_dec(4, 2, 0);
+            draw_dec(5, 2, sec);
+        }
+        else {
+            draw_dec(4, 2, sec);
+        }
+    }
+
+    void draw_terrain(void) {
+
+        for (uint16_t i = 0; i < WIDTH; i++) {
+            int terrainy = 140;
+            storeTerrainY[i] = terrainy;
+            draw_pixel(i, terrainy, WHITE);
+        }
+    }
+
+    void refresh(void) {
+        draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 3);
+        draw_bitmap(oldxposit - 2, oldyposit, black, 1, landery + 2);
+        draw_bitmap(oldxposit + 10, oldyposit, black, 1, landery + 2);
+    }
+
+    int newterrainy;
+
+    bool detect_collision(void) {
+        for (int i = 0; i < WIDTH; i++) {
+            newterrainy = storeTerrainY[i];
+            if ((xposit >= i - 5) && (xposit <= i + 5) && (yposit >= newterrainy)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void start_screen(void) {
+        xposit = 64;
+        yposit = 9;
+        fill_background(BLACK);
+        draw_terrain();
+
+    }
+
