@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+#include <inc/hw_memmap.h>
 #include "../inc/buttons.h"
 #include "inc/tm4c123gh6pm.h"
 #include "../inc/LCD.h"
@@ -31,7 +32,7 @@ float yvelocity;                  //can be negative if vertical position is incr
 float xvelocity;                  //negative value moves left, positive moves right
 float yposit = 9;                //initialize to topmost of landscape-oriented screen
 float xposit = 64;                //initialize to middle of landscape-oriented screen
-uint16_t angle = 4;                 //0 points upwards
+int16_t angle = 4;                 //0 points upwards
 float accel;                     //negative value causes increase in vertical position
 int noSystick = 0;
 unsigned short lander;
@@ -97,25 +98,25 @@ void game_loop() {
 }
 
 void process_input(void) {
-
-    uint8_t buttonState = ButtonsPoll(0, 0);
     bool noFuel = fuel == 0;
 
-    bool jetButtonPressed = GPIO_PORTE_DATA_R & (1 << 1);
-    bool rightButtonPressed = GPIO_PORTE_DATA_R & (1 << 2);
-    bool leftButtonPressed = GPIO_PORTE_DATA_R & (1 << 0);
-/*    #define ONBOARDBUTTONS
+    bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
+    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
+    bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
+
+    #define ONBOARDBUTTONS
     #ifdef ONBOARDBUTTONS
+        uint8_t buttonState = ButtonsPoll(0, 0);
         leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
         rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
     #endif
-*/
+
     if (!noFuel & jetButtonPressed) {
-        accel = -0.811;    //negative accelaration forces lander opposite gravity
+        accel = -1.5;    //negative accelaration forces lander opposite gravity
         fuel--;             //using fuel
     }
     if (noFuel | !jetButtonPressed) {
-        accel = 1.622;
+        accel = 1.0;
     }
     if (leftButtonPressed) {
         angle--;
@@ -146,15 +147,15 @@ void update (void){
 void check (void){
     //declare boolean
     bool outOfTime = seconds >= 240;
-    bool crashed = detect_collision();
-    // (int)yposit >= 120;
-    bool tooFast = (int) yvelocity >= 50;
+    bool collided = detect_collision();
+    bool tooFast = yvelocity >= -1;
+    bool crashed = collided && ((angle != 4) || tooFast);
 
     //check yposit
-    if (crashed && tooFast) {
+    if (crashed) {
         die(CRASHED);
     }
-    if (crashed && (!tooFast)) {
+    if (collided && !crashed) {
         land();
     }
 
@@ -178,19 +179,18 @@ void render (void) {
         seconds++;
     }
     write_fuel(fuel);
+    write_velocities(xvelocity, yvelocity);
     oldxposit = xposit;
     oldyposit = yposit;
     if (angle == 0) {
         draw_bitmap(xposit, yposit, landerLeft, 9, 7);
         landerx = 9;
         landery = 7;
-    }
-    if (angle > 0 && angle <= 4) {
+    } else if (angle <= 4) {
         draw_bitmap(xposit, yposit, landerUp, 7, 9);
         landerx = 7;
         landery = 9;
-    }
-    if (angle > 4 && angle <= 8) {
+    } else {
         draw_bitmap(xposit, yposit, landerRight, 9, 7);
         landerx = 9;
         landery = 7;
@@ -205,19 +205,19 @@ void die(DeathType_t deathtype) {
     //fill_background(BLACK);
     xvelocity = 0;
     yvelocity = 0;
-    draw_string(40, 0, "You died!", WHITE);
+    draw_string(1, 0, "You died!", WHITE);
     switch (deathtype) {
         case CRASHED:
-            draw_string(40, 40, "Lost 20 fuel units.", WHITE);
+            draw_string(4, 4, "Lost 20 fuel units.", WHITE);
             fuel = -20;
-            draw_string(40, 60, "Fuel left:", WHITE);
+            draw_string(4, 6, "Fuel left:", WHITE);
             write_fuel(fuel);
-            draw_string(40, 80, "Current score:", WHITE);
+            draw_string(4, 8, "Current score:", WHITE);
             write_score(score);
             break;
         case OUTOFTIME:
-            draw_string(40, 40, "Out of time!", WHITE);
-            draw_string(40, 60, "Final score:", WHITE);
+            draw_string(4, 4, "Out of time!", WHITE);
+            draw_string(4, 6, "Final score:", WHITE);
             write_score(score);
             break;
     }
@@ -233,7 +233,6 @@ void land(void) {
     if(fuel>0){
         draw_string(6, 7, "Fuel remaining:", WHITE);
         write_fuel(fuel);
-        //TODO write a slight delay
     }
     noSystick = 1;
 }
@@ -246,6 +245,13 @@ void write_score(uint16_t score) {
 void write_fuel(uint16_t inFuel) {
     draw_string(0, 1, "f:", WHITE);
     draw_dec(2, 1, inFuel);
+}
+
+void write_velocities(float xvel, float yvel) {
+    draw_string(0, 3, "xv:", WHITE);
+    draw_dec(3, 3, (uint32_t)(xvel * 1000000u));
+    draw_string(0, 4, "yv:", WHITE);
+    draw_dec(3, 4, (uint32_t)(yvel *10000u));
 }
 
 void write_time(uint16_t seconds) {
