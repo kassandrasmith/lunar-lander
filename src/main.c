@@ -82,18 +82,13 @@ int main(void) {
 }
 
 void game_loop() {
-
-    bool inEndMode = endGame == 1;
-    bool inStartMode = startGame == 1;
-    bool inGameMode = playGame == 1;
-
-    if (inStartMode) {
+    if (startGame == 1) {
         start_screen();
         check();
         startGame = 0;
         playGame = 1;
     }
-    else if (inGameMode) {
+    else if (playGame == 1) {
         process_input();
         update();
         check();
@@ -102,12 +97,11 @@ void game_loop() {
         toggleLED(FRAME_RATE);      //Debugging heartbeat
 
     }
-    else if (inEndMode) {
+    else if (endGame == 1) {
         process_input();
         check();
         tick();
         toggleLED(FRAME_RATE);      //Debugging heartbeat
-
         if (buttonPressed) {
             endGame = 0;
             playGame = 1;
