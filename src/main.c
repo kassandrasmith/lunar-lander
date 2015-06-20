@@ -44,8 +44,6 @@ int landerx;
 int landery;
 int storeTerrainY[WIDTH];
 
-bool buttonPressed = GPIO_PORTE_DATA_R & (1 << 1) || GPIO_PORTE_DATA_R & (1 << 2) ||
-                     GPIO_PORTE_DATA_R & (1 << 0);
 
 
 //TODO fix the refresh of the lander so the upright lander doesn't override the current lander
@@ -82,13 +80,19 @@ int main(void) {
 }
 
 void game_loop() {
-    if (startGame == 1) {
+    bool buttonPressed = GPIO_PORTE_DATA_R & (1 << 1) || GPIO_PORTE_DATA_R & (1 << 2) ||
+                         GPIO_PORTE_DATA_R & (1 << 0);
+    bool inEndMode = endGame == 1;
+    bool inStartMode = startGame == 1;
+    bool inGameMode = playGame == 1;
+
+    if (inStartMode) {
         start_screen();
         check();
         startGame = 0;
         playGame = 1;
     }
-    else if (playGame == 1) {
+    else if (inGameMode) {
         process_input();
         update();
         check();
@@ -97,11 +101,12 @@ void game_loop() {
         toggleLED(FRAME_RATE);      //Debugging heartbeat
 
     }
-    else if (endGame == 1) {
+    else if (inEndMode) {
         process_input();
         check();
         tick();
         toggleLED(FRAME_RATE);      //Debugging heartbeat
+
         if (buttonPressed) {
             endGame = 0;
             playGame = 1;
@@ -218,20 +223,20 @@ void game_loop() {
         //fill_background(BLACK);
         xvelocity = 0;
         yvelocity = 0;
-        draw_string(1, 0, "You died!", WHITE);
+    draw_string(5, 6, "You died!", WHITE);
         switch (deathtype) {
             case CRASHED:
-                draw_string(4, 4, "Lost 20 fuel units.", WHITE);
+                draw_string(1, 8, "Lost 20 fuel units.", WHITE);
                 fuel = -20;
-                draw_string(4, 6, "Fuel left:", WHITE);
-                write_fuel(fuel);
-                draw_string(4, 8, "Current score:", WHITE);
-                write_score(score);
+                //draw_string(4, 6, "Fuel left:", WHITE);
+                //write_fuel(fuel);
+                //draw_string(4, 8, "Current score:", WHITE);
+                //write_score(score);
                 break;
             case OUTOFTIME:
-                draw_string(4, 4, "Out of time!", WHITE);
-                draw_string(4, 6, "Final score:", WHITE);
-                write_score(score);
+                draw_string(4, 8, "Out of time!", WHITE);
+                //draw_string(4, 6, "Final score:", WHITE);
+                //write_score(score);
                 break;
         }
 
