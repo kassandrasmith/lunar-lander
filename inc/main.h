@@ -19,10 +19,7 @@ void write_score (uint16_t);
 void write_fuel (uint16_t);
 void write_time (uint16_t);
 void refresh(void);
-
 void start_screen(void);
-
 bool detect_collision(void);
-
 
 #endif //LUNAR_LANDER_MAIN_H

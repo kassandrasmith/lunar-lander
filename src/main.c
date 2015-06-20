@@ -37,12 +37,10 @@ float accel;                        //negative value causes increase in vertical
 int endGame = 0;
 int startGame = 1;
 int playGame = 0;
-int lander[];
-unsigned short *landerPointer;
 float oldxposit;
 float oldyposit;
-int landerx;
-int landery;
+int16_t width;
+int16_t height;
 int storeTerrainY[WIDTH];
 
 
@@ -83,17 +81,15 @@ int main(void) {
 void game_loop() {
     bool buttonPressed = GPIO_PORTE_DATA_R & (1 << 1) || GPIO_PORTE_DATA_R & (1 << 2) ||
                          GPIO_PORTE_DATA_R & (1 << 0);
-    bool inEndMode = endGame == 1;
-    bool inStartMode = startGame == 1;
-    bool inGameMode = playGame == 1;
 
-    if (inStartMode) {
+
+    if (startGame) {
         start_screen();
         check();
         startGame = 0;
         playGame = 1;
     }
-    else if (inGameMode) {
+    else if (playGame) {
         process_input();
         update();
         check();
@@ -102,7 +98,7 @@ void game_loop() {
         toggleLED(FRAME_RATE);      //Debugging heartbeat
 
     }
-    else if (inEndMode) {
+    else if (endGame) {
         process_input();
         check();
         tick();
@@ -192,6 +188,8 @@ void check(void) {
 }
 
 void render(void) {
+    sprite sprite = *landerSprites[angle];
+
     write_score(score);
     if (time % FRAME_RATE == 0) {
         write_time(seconds);
@@ -199,23 +197,14 @@ void render(void) {
     }
     write_fuel(fuel);
     write_velocities(xvelocity, yvelocity);
+    write_angle(angle);
     oldxposit = xposit;
     oldyposit = yposit;
-    if (angle == 0) {
-        landerx = 9;
-        landery = 7;
-        landerPointer = landerLeft;
-    } else if (angle <= 4) {
-        landerx = 7;
-        landery = 9;
-        landerPointer = landerUp;
-    } else {
-        landerx = 9;
-        landery = 7;
-        landerPointer = landerRight;
-    }
+    width = sprite.width;
+    height = sprite.height;
+    const uint16_t *data = sprite.data;
     //TODO add other landers and other angle cases
-    draw_bitmap(xposit, yposit, landerPointer, landerx, landery);
+    draw_bitmap((int16_t) xposit, (int16_t) yposit, data, width, height);
     refresh();
 }
 
@@ -266,12 +255,6 @@ void write_fuel(uint16_t inFuel) {
     draw_dec(2, 1, inFuel);
 }
 
-void write_velocities(float xvel, float yvel) {
-    draw_string(0, 3, "xv:", WHITE);
-    draw_dec(3, 3, (uint32_t) (xvel * 1000000u));
-    draw_string(0, 4, "yv:", WHITE);
-    draw_dec(3, 4, (uint32_t) (yvel * 10000u));
-}
 
 void write_time(uint16_t seconds) {
     //FIXME: The seconds doesn't draw a leading zero for the tens place.
@@ -303,8 +286,8 @@ void draw_terrain(void) {
 
 void refresh(void) {
     draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 3);
-    draw_bitmap(oldxposit - 2, oldyposit, black, 1, landery + 2);
-    draw_bitmap(oldxposit + 10, oldyposit, black, 1, landery + 2);
+    draw_bitmap(oldxposit - 2, oldyposit, black, 1, height + 2);
+    draw_bitmap(oldxposit + 10, oldyposit, black, 1, height + 2);
 }
 
 int newterrainy;

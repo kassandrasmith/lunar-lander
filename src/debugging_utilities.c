@@ -1,6 +1,7 @@
 #include <inc/tm4c123gh6pm.h>
 #include "stdint.h"
 #include "../inc/debugging_utilities.h"
+#include "../inc/LCD.h"
 int lastTimerValue;
 uint16_t tickCount;
 
@@ -17,3 +18,16 @@ void toggleLED(int tickThreshold){
 void tick(){
     tickCount++;
 }
+
+void write_velocities(float xvel, float yvel) {
+    draw_string(0, 3, "xv:", WHITE);
+    draw_dec(3, 3, (uint32_t) (xvel * 1000000u));
+    draw_string(0, 4, "yv:", WHITE);
+    draw_dec(3, 4, (uint32_t) (yvel * 10000u));
+}
+
+void write_angle(int16_t angle) {
+    draw_string(0, 5, "a:", WHITE);
+    draw_dec(3, 5, (uint32_t) angle);
+}
+
