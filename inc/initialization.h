@@ -10,10 +10,14 @@ void DAC_Init(void);
 void PortF_Init(void);
 
 void PortE_Init(void);
-void sound_init(void);
+
+void sound_init(int frameRate);
 
 
 void Timer0_Init(void);
 void Timer0A_Handler(void);
+
+
+void sysTick_init(int frameRate);
 
 #endif

@@ -65,15 +65,9 @@ int main(void) {
     PortF_Init();
     screen_init();
 
-    sound_init();
     FPULazyStackingEnable();
-    // Trigger an interrupt every 30th of a second.
-    // The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
-    SysTickPeriodSet(SysCtlClockGet() / (float)FRAME_RATE);
-    SysTickEnable();
-    SysTickIntRegister(game_loop);
-    SysTickIntEnable();
-
+    sound_init(FRAME_RATE);
+    sysTick_init(FRAME_RATE);
     IntMasterEnable();                                         //end of initializations, enable interrupts
     // initial state for screen
     fill_background(BLACK);

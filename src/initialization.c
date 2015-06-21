@@ -93,3 +93,14 @@ void Timer0A_Handler(void){
     TIMER0_ICR_R = TIMER_ICR_TATOCINT;// acknowledge TIMER0A timeout
     (*PeriodicTask0)();                // execute user task
 }*/
+
+
+void sysTick_init(int frameRate) {
+
+// Trigger an interrupt every 30th of a second.
+// The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
+    SysTickPeriodSet(SysCtlClockGet() / (float) frameRate);
+    SysTickEnable();
+    SysTickIntRegister(game_loop);
+    SysTickIntEnable();
+}
