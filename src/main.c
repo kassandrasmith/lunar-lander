@@ -3,8 +3,9 @@
 #include <stdbool.h>
 #include <math.h>
 #include <inc/hw_memmap.h>
-#include "../inc/buttons.h"
+#include "inc/hw_ints.h"
 #include "inc/tm4c123gh6pm.h"
+#include "../inc/buttons.h"
 #include "../inc/LCD.h"
 #include "../inc/PLL.h"
 #include "../inc/initialization.h"
@@ -15,8 +16,10 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
+#include "driverlib/timer.h"
 #include "../inc/debugging_utilities.h"
 #include "../inc/computations.h"
+#include "../inc/sound.h"
 
 #define FRAME_RATE 30
 
@@ -61,8 +64,9 @@ int main(void) {
     // (may not be necessary in later releases)
     PortF_Init();
     screen_init();
-    FPUStackingEnable();
-    start_screen();
+
+    sound_init();
+    FPULazyStackingEnable();
     // Trigger an interrupt every 30th of a second.
     // The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
     SysTickPeriodSet(SysCtlClockGet() / (float)FRAME_RATE);
@@ -115,11 +119,10 @@ void game_loop() {
 void process_input(void) {
     bool noFuel = fuel == 0;
 
-    bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
-    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
-    bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
+    bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 4);
+    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 2);
+    bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
 
-#define ONBOARDBUTTONS
 #ifdef ONBOARDBUTTONS
     uint8_t buttonState = ButtonsPoll(0, 0);
     leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
@@ -309,4 +312,3 @@ void start_screen(void) {
     draw_terrain();
 
 }
-
