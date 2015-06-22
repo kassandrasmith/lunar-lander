@@ -23,8 +23,11 @@
 //*****************************************************************************
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
+#include "../inc/sound.h"
+#include "../inc/main.h"
 
 //*****************************************************************************
 //
@@ -48,7 +51,7 @@ extern int main(void);
 // Reserve space for the system stack.
 //
 //*****************************************************************************
-static uint32_t pui32Stack[128];
+static uint32_t pui32Stack[256];
 
 //*****************************************************************************
 //
@@ -75,7 +78,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
     IntDefaultHandler,                      // The PendSV handler
-    IntDefaultHandler,                      // The SysTick handler
+    game_loop,                              // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
@@ -99,7 +102,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Timer 0 subtimer B
     IntDefaultHandler,                      // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
-    IntDefaultHandler,                      // Timer 2 subtimer A
+    sound_handler,                          // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B
     IntDefaultHandler,                      // Analog Comparator 0
     IntDefaultHandler,                      // Analog Comparator 1
@@ -174,7 +177,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Wide Timer 0 subtimer B
     IntDefaultHandler,                      // Wide Timer 1 subtimer A
     IntDefaultHandler,                      // Wide Timer 1 subtimer B
-    IntDefaultHandler,                      // Wide Timer 2 subtimer A
+    sound_handler,                          // Wide Timer 2 subtimer A
     IntDefaultHandler,                      // Wide Timer 2 subtimer B
     IntDefaultHandler,                      // Wide Timer 3 subtimer A
     IntDefaultHandler,                      // Wide Timer 3 subtimer B

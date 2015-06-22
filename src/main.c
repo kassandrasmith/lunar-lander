@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <math.h>
 #include <inc/hw_memmap.h>
 #include "inc/hw_ints.h"
 #include "inc/tm4c123gh6pm.h"
 #include "../inc/buttons.h"
 #include "../inc/LCD.h"
-#include "../inc/PLL.h"
 #include "../inc/initialization.h"
 #include "../inc/main.h"
 #include "../inc/images.h"
@@ -22,6 +20,7 @@
 #include "../inc/sound.h"
 
 #define FRAME_RATE 30
+#define SOUND_RATE 4
 
 //declare global variables
 uint16_t score = 0;
@@ -30,12 +29,11 @@ uint16_t seconds = 0;
 uint16_t fuel = 3000;
 char multiplier = 0;                //To be used to increase score according to where the lander lands
 float ttime = .07;                  //TODO set to refresh rate
-//declare variables
 float yvelocity;                    //can be negative if vertical position is increasing
 float xvelocity;                    //negative value moves left, positive moves right
 float yposit = 9;                   //initialize to topmost of landscape-oriented screen
 float xposit = 64;                  //initialize to middle of landscape-oriented screen
-int16_t angle = 4;                  //4 points upwards, 0 leftwards, and 8 rightwards
+uint16_t angle = 4;                  //4 points upwards, 0 leftwards, and 8 rightwards
 float accel;                        //negative value causes increase in vertical position
 int endGame = 0;
 int startGame = 1;
@@ -47,42 +45,29 @@ int16_t height;
 int storeTerrainY[WIDTH];
 
 
-
-//TODO fix the refresh of the lander so the upright lander doesn't override the current lander
 int main(void) {
+    //Initializations board connections
+    IntMasterDisable();         //Interrupts must be disabled here to prevent unwanted triggering
+    DAC_Init();                 //Digital to analog converter for sounds.
+    ButtonsInit();              //Allows for easier writing to handle button inputs
+    PortE_Init();               //Initialize hardware off-board buttons
+    PortF_Init();               //Initializes on-board buttons and LEDs for debugging
+    screen_init();              //Initializes screen
 
-    //Run initializations
-    //Interrupts must be disabled here to prevent them
-    //from triggering during an initialization
-    IntMasterDisable();
-    //Digital to analog converter for sounds.
-    //We utilize a 6 bit 2R styled DAC
-    DAC_Init();
-    PortE_Init();
-    ButtonsInit();
-    //Port F controls on-board buttons and LEDs which we use for debugging
-    // (may not be necessary in later releases)
-    PortF_Init();
-    screen_init();
-
+    //Initialize interrupts
     FPULazyStackingEnable();
-    sound_init(FRAME_RATE);
+    sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
+    sysTick_init(FRAME_RATE);   //Initializes Systick interrupt to handle game loop
+    IntMasterEnable();          //end of initializations, enable interrupts
 
-    sysTick_init(FRAME_RATE);
+    start_screen();             // set screen to initial state
 
-    IntMasterEnable();                                         //end of initializations, enable interrupts
-    // initial state for screen
-    fill_background(BLACK);
-    // We need to stall here and wait for systick to trigger the game
-    // loop at regular intervals.
+    // We need to stall here and wait for the interrupts to trigger at regular intervals.
     while(true);
 }
 
+bool buttonPressed;
 void game_loop() {
-    bool buttonPressed = GPIO_PORTE_DATA_R & (1 << 1) || GPIO_PORTE_DATA_R & (1 << 2) ||
-                         GPIO_PORTE_DATA_R & (1 << 0);
-
-
     if (startGame) {
         start_screen();
         check();
@@ -111,15 +96,17 @@ void game_loop() {
         }
     }
     SysTickDisable();
-    IntEnable(INT_TIMER2A);
+
+    if (endGame) { IntDisable(INT_TIMER2A); }
+    else { IntEnable(INT_TIMER2A); }
 }
 
 void process_input(void) {
     bool noFuel = fuel == 0;
-
-    bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 4);
-    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 2);
+    bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
+    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
     bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
+    buttonPressed = jetButtonPressed || rightButtonPressed || leftButtonPressed;
 
 #ifdef ONBOARDBUTTONS
     uint8_t buttonState = ButtonsPoll(0, 0);
@@ -174,12 +161,10 @@ void check(void) {
     if (collided && !crashed) {
         land();
     }
-
     //check time
     if (outOfTime) {
         die(OUTOFTIME);
     }
-
     if (xposit >= 128) {
         xposit = 0;
     }
@@ -190,7 +175,6 @@ void check(void) {
 
 void render(void) {
     sprite sprite = *landerSprites[angle];
-
     write_score(score);
     if (time % FRAME_RATE == 0) {
         write_time(seconds);
@@ -214,23 +198,23 @@ void die(DeathType_t deathtype) {
     //fill_background(BLACK);
     xvelocity = 0;
     yvelocity = 0;
-    draw_string(5, 6, "You died!", WHITE);
+    draw_string(5, 6, "You died!", (int16_t) WHITE);
     switch (deathtype) {
         case CRASHED:
-            draw_string(1, 8, "Lost 20 fuel units.", WHITE);
-            fuel = -20;
-            //draw_string(4, 6, "Fuel left:", WHITE);
+            draw_string(1, 8, "Lost 20 fuel units.", (int16_t) WHITE);
+            fuel -= 20;
+            //draw_string(4, 6, "Fuel left:", (int16_t)WHITE);
             //write_fuel(fuel);
-            //draw_string(4, 8, "Current score:", WHITE);
+            //draw_string(4, 8, "Current score:", (int16_t)WHITE);
             //write_score(score);
             break;
         case OUTOFTIME:
-            draw_string(4, 8, "Out of time!", WHITE);
-            //draw_string(4, 6, "Final score:", WHITE);
+            draw_string(4, 8, "Out of time!", (int16_t) WHITE);
+            //draw_string(4, 6, "Final score:", (int16_t)WHITE);
             //write_score(score);
             break;
     }
-
+    endGame = 1;
 }
 
 void land(void) {
@@ -238,21 +222,21 @@ void land(void) {
     xvelocity = 0;
     yvelocity = 0;
     oldxposit = 0;
-    draw_string(6, 6, "You landed!", WHITE);
+    draw_string(6, 6, "You landed!", (int16_t) WHITE);
     if (fuel > 0) {
-        draw_string(6, 7, "Fuel remaining:", WHITE);
+        draw_string(6, 7, "Fuel remaining:", (int16_t) WHITE);
         write_fuel(fuel);
     }
     endGame = 1;
 }
 
 void write_score(uint16_t score) {
-    draw_string(0, 0, "s:", WHITE);
+    draw_string(0, 0, "s:", (int16_t) WHITE);
     draw_dec(2, 0, score);
 }
 
 void write_fuel(uint16_t inFuel) {
-    draw_string(0, 1, "f:", WHITE);
+    draw_string(0, 1, "f:", (int16_t) WHITE);
     draw_dec(2, 1, inFuel);
 }
 
@@ -260,12 +244,12 @@ void write_fuel(uint16_t inFuel) {
 void write_time(uint16_t seconds) {
     //FIXME: The seconds doesn't draw a leading zero for the tens place.
     //This leads to strange behaviour at the start of a new minute
-    draw_string(0, 2, "t:", WHITE);
+    draw_string(0, 2, "t:", (int16_t) WHITE);
 
     //FIXME: Doesn't handle over 10 minutes
     uint8_t min = (uint8_t) (seconds / 60);
     draw_dec(2, 2, min);
-    draw_string(3, 2, ":", WHITE);
+    draw_string(3, 2, ":", (int16_t) WHITE);
     uint8_t sec = seconds - min * 60;
     if (sec < 10) {
         draw_dec(4, 2, 0);
@@ -279,7 +263,7 @@ void write_time(uint16_t seconds) {
 void draw_terrain(void) {
 
     for (uint16_t i = 0; i < WIDTH; i++) {
-        int terrainy = 140;
+        int16_t terrainy = 140;
         storeTerrainY[i] = terrainy;
         draw_pixel(i, terrainy, WHITE);
     }
@@ -292,7 +276,6 @@ void refresh(void) {
 }
 
 int newterrainy;
-
 bool detect_collision(void) {
     for (int i = 0; i < WIDTH; i++) {
         newterrainy = storeTerrainY[i];
@@ -308,5 +291,4 @@ void start_screen(void) {
     yposit = 9;
     fill_background(BLACK);
     draw_terrain();
-
 }

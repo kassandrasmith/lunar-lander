@@ -11,11 +11,7 @@ void PortF_Init(void);
 
 void PortE_Init(void);
 
-void sound_init(int frameRate);
-
-void Timer0_Init(void);
-void Timer0A_Handler(void);
-
+void sound_init(int soundRate);
 
 void sysTick_init(int frameRate);
 
