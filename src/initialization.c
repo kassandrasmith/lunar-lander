@@ -5,12 +5,14 @@
 #include "driverlib/rom.h"
 #include "driverlib/timer.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/systick.h"
 #include "inc/hw_types.h"
 #include "inc/hw_memmap.h"
 #include "driverlib/rom_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 #include "../inc/sound.h"
+#include "../inc/main.h"
 // GPIO_PIN_X is defined in gpio.h
 #define LED_RED GPIO_PIN_1
 #define LED_BLUE GPIO_PIN_2
@@ -52,16 +54,40 @@ void PortE_Init(void) {
     GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
 }
 
-void sound_init(void) {
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+void sound_init(int frameRate) {
+
+    int TIMER_DEBUG = TIMER2_BASE;
+    int INTERRUPT_NUM = INT_TIMER2A;
+    int AORB = TIMER_A;
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
     IntMasterEnable();
-    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
-    TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet());
-    IntEnable(INT_TIMER0A);
-    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-    TimerEnable(TIMER0_BASE, TIMER_A);
-    TimerIntRegister(TIMER0_BASE, TIMER_A, sound_handler);
-    IntRegister(INT_TIMER0A, sound_handler);
+    TimerConfigure(TIMER_DEBUG, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER_DEBUG, AORB, SysCtlClockGet() / 4);
+    IntPrioritySet(INTERRUPT_NUM, 0);
+    // Setup the interrupts for the timer timeouts.
+    IntEnable(INTERRUPT_NUM);
+    TimerIntRegister(TIMER_DEBUG, AORB, sound_handler);
+    TimerIntEnable(TIMER_DEBUG, TIMER_TIMA_TIMEOUT);
+    // Enable the timers.
+    TimerEnable(TIMER_DEBUG, AORB);
+
+    //
+    // Loop forever while the timers run.
+    //
+    /*TimerDisable( TIMER1_BASE , TIMER_A );
+    HWREG( TIMER1_BASE + 0x000 ) = 0x00000000;
+
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+    IntMasterEnable();
+    TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER1_BASE, TIMER_A, 150);
+    IntEnable(INT_TIMER1A);
+    TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER1_BASE, TIMER_A);
+    TimerIntRegister(TIMER1_BASE, TIMER_A, sound_handler);
+    IntRegister(INT_TIMER1A, sound_handler);*/
 }
 
 /*

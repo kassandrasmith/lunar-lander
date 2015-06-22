@@ -13,7 +13,6 @@ void PortE_Init(void);
 
 void sound_init(int frameRate);
 
-
 void Timer0_Init(void);
 void Timer0A_Handler(void);
 

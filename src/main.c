@@ -67,7 +67,9 @@ int main(void) {
 
     FPULazyStackingEnable();
     sound_init(FRAME_RATE);
+
     sysTick_init(FRAME_RATE);
+
     IntMasterEnable();                                         //end of initializations, enable interrupts
     // initial state for screen
     fill_background(BLACK);
@@ -108,6 +110,8 @@ void game_loop() {
             start_screen();
         }
     }
+    SysTickDisable();
+    IntEnable(INT_TIMER2A);
 }
 
 void process_input(void) {
