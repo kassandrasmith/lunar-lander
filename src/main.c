@@ -21,7 +21,7 @@
 
 #define FRAME_RATE 30
 #define SOUND_RATE 4
-
+#define GRAVITY 1.5f
 //declare global variables
 uint16_t score = 0;
 uint16_t time = 0;
@@ -33,8 +33,13 @@ float yvelocity;                    //can be negative if vertical position is in
 float xvelocity;                    //negative value moves left, positive moves right
 float yposit = 9;                   //initialize to topmost of landscape-oriented screen
 float xposit = 64;                  //initialize to middle of landscape-oriented screen
-uint16_t angle = 4;                  //4 points upwards, 0 leftwards, and 8 rightwards
+
+int16_t angle = 4;                  //4 points upwards, 0 leftwards, and 8 rightwards
 float accel;                        //negative value causes increase in vertical position
+float yaccel;                        //negative value causes increase in vertical position
+float xaccel;
+float thrusterAccel;
+
 int endGame = 0;
 int startGame = 1;
 int playGame = 0;
@@ -68,6 +73,11 @@ int main(void) {
 
 bool buttonPressed;
 void game_loop() {
+    bool buttonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2) ||
+            GPIOPinRead(GPIO_PORTE_BASE, 1 << 1) ||
+            GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
+
+
     if (startGame) {
         start_screen();
         check();
@@ -103,6 +113,7 @@ void game_loop() {
 
 void process_input(void) {
     bool noFuel = fuel == 0;
+
     bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
     bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
     bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
@@ -114,12 +125,11 @@ void process_input(void) {
     rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
 #endif
 
-    if (!noFuel & jetButtonPressed) {
-        accel = -1.5;    //negative accelaration forces lander opposite gravity
+    if (!noFuel && jetButtonPressed) {
         fuel--;             //using fuel
-    }
-    if (noFuel | !jetButtonPressed) {
-        accel = 1.0;
+        thrusterAccel = -2.5f;
+    } else {
+        thrusterAccel = 0.0;
     }
     if (leftButtonPressed) {
         angle--;
@@ -137,11 +147,11 @@ void process_input(void) {
 //update location and time
 void update(void) {
     time++;
-    float vaccel = sinAngle(angle) * accel;
-    float haccel = cosAngle(angle) * accel;
+    yaccel = sinAngle(angle) * thrusterAccel + GRAVITY;
+    xaccel = cosAngle(angle) * thrusterAccel;
 
-    yvelocity += vaccel * ttime;
-    xvelocity += haccel * ttime;
+    yvelocity += yaccel * ttime;
+    xvelocity += xaccel * ttime;
 
     yposit += yvelocity * ttime;
     xposit += xvelocity * ttime;
@@ -151,7 +161,7 @@ void check(void) {
     //declare boolean
     bool outOfTime = seconds >= 240;
     bool collided = detect_collision();
-    bool tooFast = yvelocity >= -1;
+    bool tooFast = yvelocity >= 2.0;
     bool crashed = collided && ((angle != 4) || tooFast);
 
     //check yposit
