@@ -101,11 +101,13 @@ void game_loop() {
     else { IntEnable(INT_TIMER2A); }
 }
 
+bool jetButtonPressed;
 void process_input(void) {
-    bool noFuel = fuel == 0;
-    bool jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
+
+    jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
     bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
     bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
+    bool noFuel = fuel == 0;
     buttonPressed = jetButtonPressed || rightButtonPressed || leftButtonPressed;
 
 #ifdef ONBOARDBUTTONS
@@ -135,16 +137,23 @@ void process_input(void) {
     }
 }
 //update location and time
+float haccel;
 void update(void) {
     time++;
+
     float vaccel = sinAngle(angle) * accel;
-    float haccel = cosAngle(angle) * accel;
+    if (jetButtonPressed) {
+        haccel = cosAngle(angle) * accel;
+    }
+    else {
+        haccel = 0;
+    }
 
-    yvelocity += vaccel * ttime;
-    xvelocity += haccel * ttime;
+    yvelocity += (vaccel * ttime);
+    xvelocity += (haccel * ttime);
 
-    yposit += yvelocity * ttime;
-    xposit += xvelocity * ttime;
+    yposit += (yvelocity * ttime);
+    xposit += (xvelocity * ttime);
 }
 //"check" the things that will kill you
 void check(void) {

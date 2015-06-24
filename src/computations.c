@@ -7,11 +7,12 @@
 
 /*
  * Sine Table
- * 0 or 180  -> 0
- * 30 or 150 -> 0.5
- * 45 or 135 -> 0.707
- * 60 or 120 -> 0.866
- * 90         -> 1.0
+ * angle    degrees   -> sine
+ * 0 or 8   0 or 180  -> 0
+ * 1 or 7   30 or 150 -> 0.5
+ * 2 or 6   45 or 135 -> 0.707
+ * 3 or 5   60 or 120 -> 0.866
+ * 4        90        -> 1.0
  */
 
 float sineValues[] = {
@@ -25,19 +26,20 @@ float sinAngle(uint16_t angle) {
 //cosine can be negative, which increases the number of checks we must do
 /*
  * Cosine Table
- * 0    ->  1
- * 180  -> -1
- * 30   -> 0.866
- * 150  -> -0.866
- * 45   -> 0.707
- * 135  -> -0.707
- * 60   -> 0.5
- * 120  -> -0.5
- * 90   -> 0.0
+ * angle    degrees -> cosine
+ * 8        0    ->  1
+ * 7        30   -> 0.866
+ * 6        45   -> 0.707
+ * 5        60   -> 0.5
+ * 4        90   -> 0.0
+ * 3        120  -> -0.5
+ * 2        135  -> -0.707
+ * 1        150  -> -0.866
+ * 0        180  -> -1
  */
 
 float cosineValues[] = {
-        -1, -0.866, -0.707, -0.5, 0, 0.5, 0.707, 0.866, 1
+        1, 0.866, 0.707, 0.5, 0, -0.5, -0.707, -0.866, -1
 };
 
 float cosAngle (uint16_t angle){
