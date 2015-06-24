@@ -35,8 +35,7 @@ float yposit = 9;                   //initialize to topmost of landscape-oriente
 float xposit = 64;                  //initialize to middle of landscape-oriented screen
 uint16_t angle = 4;                  //4 points upwards, 0 leftwards, and 8 rightwards
 float accel;                        //negative value causes increase in vertical position
-float yaccel;                        //negative value causes increase in vertical position
-float xaccel;
+
 float thrusterAccel;
 
 int endGame = 0;
@@ -121,11 +120,11 @@ void process_input(void) {
 #endif
 
     if (!noFuel && jetButtonPressed) {
-        fuel--;             //using fuel
-        thrusterAccel = -2.5f;
+        fuel--;}             //using fuel
+        /*thrusterAccel = -2.5f;
     } else {
         thrusterAccel = 0.0;
-    }
+    }*/
     if (noFuel | !jetButtonPressed) {
         accel = 1.0;
     }
@@ -143,22 +142,24 @@ void process_input(void) {
     }
 }
 //update location and time
-float haccel;
+float xaccel;
 void update(void) {
     time++;
 
-    float vaccel = sinAngle(angle) * accel;
+    float yaccel = sinAngle(angle) * accel;
     if (jetButtonPressed) {
-        haccel = cosAngle(angle) * accel;
+        xaccel = cosAngle(angle) * accel;
     }
     else {
-        haccel = 0;
+        xaccel = 0;
     }
+
+    /*
     yaccel = sinAngle(angle) * thrusterAccel + GRAVITY;
     xaccel = cosAngle(angle) * thrusterAccel;
-
-    yvelocity += vaccel * ttime;
-    xvelocity += haccel * ttime;
+*/
+    yvelocity += yaccel * ttime;
+    xvelocity += xaccel * ttime;
 
     yposit += yvelocity * ttime;
     xposit += xvelocity * ttime;
