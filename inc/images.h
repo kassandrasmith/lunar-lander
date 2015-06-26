@@ -54,10 +54,33 @@ const uint16_t lander8Image[] = {
 };
 
 /* Angled landers (2/6))
+ * x: 8 px
+ * y: 7 px
+ */
+const uint16_t lander1Image[] = {
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, BLACK, WHITE, WHITE, WHITE, BLACK,
+        BLACK, WHITE, WHITE, WHITE, BLACK, BLACK, WHITE, BLACK,
+        BLACK, BLACK, BLACK, BLACK, WHITE, WHITE, WHITE, BLACK,
+        BLACK, BLACK, BLACK, WHITE, WHITE, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+};
+
+const uint16_t lander7Image[] = {
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK, WHITE, WHITE, WHITE, BLACK,
+        BLACK, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, WHITE, WHITE, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+};
+
+/* Angled landers (2/6))
  * x: 9 px
  * y: 9 px
  */
-
 const uint16_t lander2Image[] = {
         BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
         BLACK, BLACK, BLACK, BLACK, WHITE, WHITE, WHITE, WHITE, BLACK,
@@ -81,10 +104,6 @@ const uint16_t lander6Image[] = {
        BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK,
        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 };
-
-
-
-
 
 
 const uint16_t black[] = {
@@ -128,14 +147,16 @@ typedef struct sprite {
 
 
 sprite lander0 = {.width = 9, .height = 7, .data = lander0Image};
+sprite lander1 = {.width = 8, .height = 7, .data = lander1Image};
 sprite lander2 = {.width = 9, .height = 9, .data = lander2Image};
 sprite lander4 = {.width = 7, .height = 9, .data = lander4Image};
 sprite lander6 = {.width = 9, .height = 9, .data = lander6Image};
+sprite lander7 = {.width = 8, .height = 7, .data = lander7Image};
 sprite lander8 = {.width = 9, .height = 7, .data = lander8Image};
 
 
-sprite *landerSprites[9] = {&lander8, &lander8, &lander6, &lander4, &lander4, &lander4,
-                            &lander2, &lander0, &lander0};
+sprite *landerSprites[9] = {&lander8, &lander7, &lander6, &lander4, &lander4, &lander4,
+                            &lander2, &lander1, &lander0};
 
 
 #endif //LUNAR_LANDER_IMAGES_H
