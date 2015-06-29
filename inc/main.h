@@ -15,9 +15,8 @@ void render(void);
 void die(DeathType_t);
 void land(void);
 void draw_terrain(void);
-void write_score (uint16_t);
-void write_fuel (uint16_t);
-void write_time (uint16_t);
+
+void write(uint16_t score, uint16_t fuel, uint16_t seconds);
 void refresh(void);
 void start_screen(void);
 bool detect_collision(void);

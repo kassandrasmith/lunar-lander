@@ -47,6 +47,8 @@ float oldxposit;
 float oldyposit;
 int16_t width;
 int16_t height;
+int16_t xoffset;
+int16_t yoffset;
 int storeTerrainY[WIDTH];
 
 
@@ -73,6 +75,12 @@ int main(void) {
 
 bool buttonPressed;
 void game_loop() {
+    if (endGame && buttonPressed) {
+        endGame = 0;
+        playGame = 1;
+        start_screen();
+    }
+
     if (startGame) {
         start_screen();
         check();
@@ -90,20 +98,13 @@ void game_loop() {
     }
     else if (endGame) {
         process_input();
-        check();
         tick();
         toggleLED(FRAME_RATE);      //Debugging heartbeat
-
-        if (buttonPressed) {
-            endGame = 0;
-            playGame = 1;
-            start_screen();
-        }
     }
     SysTickDisable();
 
-    if (endGame) { IntDisable(INT_TIMER2A); }
-    else { IntEnable(INT_TIMER2A); }
+    // if (endGame) { IntDisable(INT_TIMER2A); }
+    IntEnable(INT_TIMER2A);
 }
 
 bool jetButtonPressed;
@@ -123,7 +124,7 @@ void process_input(void) {
 
     if (!noFuel && jetButtonPressed) {
         fuel--;             //using fuel
-        thrusterAccel = 2.5f;
+        thrusterAccel = -2.5f;
     } else {
         thrusterAccel = 0.0;
     }
@@ -195,12 +196,14 @@ void check(void) {
 
 void render(void) {
     sprite sprite = *landerSprites[angle];
-    write_score(score);
+    // testsprite testsprite = *testLanderSprite[angle];
+    write(score, fuel, seconds); //time);
+
     if (time % FRAME_RATE == 0) {
-        write_time(seconds);
+        //write_time(seconds);
         seconds++;
     }
-    write_fuel(fuel);
+
     write_velocities(xvelocity, yvelocity);
     write_angle(angle);
     oldxposit = xposit;
@@ -208,8 +211,16 @@ void render(void) {
     width = sprite.width;
     height = sprite.height;
     const uint16_t *data = sprite.data;
-    //TODO add other landers and other angle cases
     draw_bitmap((int16_t) xposit, (int16_t) yposit, data, width, height);
+    /*
+    width = testsprite.width;
+    height = testsprite.height;
+    xoffset = testsprite.xoffset;
+    yoffset = testsprite.yoffset;
+    const uint16_t *data = testsprite.data;
+    draw_bitmap((int16_t) xposit, (int16_t) yposit, landerBody, 5, 6);
+    draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
+     */
     refresh();
 }
 
@@ -218,13 +229,13 @@ void die(DeathType_t deathtype) {
     //fill_background(BLACK);
     xvelocity = 0;
     yvelocity = 0;
-    draw_string(5, 6, "You died!", (int16_t) WHITE);
+    draw_string(6, 6, "You died!", (int16_t) WHITE);
     switch (deathtype) {
         case CRASHED:
-            draw_string(1, 8, "Lost 20 fuel units.", (int16_t) WHITE);
+            draw_string(1, 7, "Lost 20 fuel units.", (int16_t) WHITE);
             fuel -= 20;
-            //draw_string(4, 6, "Fuel left:", (int16_t)WHITE);
-            //write_fuel(fuel);
+            draw_string(3, 8, "Fuel left:", (int16_t) WHITE);
+            draw_dec(14, 8, fuel);
             //draw_string(4, 8, "Current score:", (int16_t)WHITE);
             //write_score(score);
             break;
@@ -244,28 +255,21 @@ void land(void) {
     oldxposit = 0;
     draw_string(6, 6, "You landed!", (int16_t) WHITE);
     if (fuel > 0) {
-        draw_string(6, 7, "Fuel remaining:", (int16_t) WHITE);
-        write_fuel(fuel);
+        draw_string(6, 7, "Fuel left:", (int16_t) WHITE);
+        draw_dec(6, 8, fuel);
     }
     endGame = 1;
 }
 
-void write_score(uint16_t score) {
+void write(uint16_t score, uint16_t fuel, uint16_t seconds) {
     draw_string(0, 0, "s:", (int16_t) WHITE);
     draw_dec(2, 0, score);
-}
-
-void write_fuel(uint16_t inFuel) {
     draw_string(0, 1, "f:", (int16_t) WHITE);
-    draw_dec(2, 1, inFuel);
-}
+    draw_dec(2, 1, fuel);
 
-
-void write_time(uint16_t seconds) {
     //FIXME: The seconds doesn't draw a leading zero for the tens place.
     //This leads to strange behaviour at the start of a new minute
     draw_string(0, 2, "t:", (int16_t) WHITE);
-
     //FIXME: Doesn't handle over 10 minutes
     uint8_t min = (uint8_t) (seconds / 60);
     draw_dec(2, 2, min);
@@ -278,12 +282,13 @@ void write_time(uint16_t seconds) {
     else {
         draw_dec(4, 2, sec);
     }
+
 }
 
 void draw_terrain(void) {
 
     for (uint16_t i = 0; i < WIDTH; i++) {
-        int16_t terrainy = 140;
+        int16_t terrainy = 140;     //TODO Random number generator (+1, +0, -1)
         storeTerrainY[i] = terrainy;
         draw_pixel(i, terrainy, WHITE);
     }
@@ -297,9 +302,9 @@ void refresh(void) {
 
 int newterrainy;
 bool detect_collision(void) {
-    for (int i = 0; i < WIDTH; i++) {
+    for (int i = (int) xposit; i < xposit + 8; i++) {
         newterrainy = storeTerrainY[i];
-        if ((xposit >= i - 5) && (xposit <= i + 5) && (yposit >= newterrainy)) {
+        if (yposit >= newterrainy) {
             return true;
         }
     }

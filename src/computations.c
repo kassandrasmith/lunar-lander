@@ -39,7 +39,7 @@ float sinAngle(uint16_t angle) {
  */
 
 float cosineValues[] = {
-        -1, -0.866, -0.707, -0.5, 0, 0.5, 0.707, 0.866, 1
+        1, 0.866, 0.707, 0.5, 0, -0.5, -0.707, -0.866, -1
 };
 
 float cosAngle (uint16_t angle){
