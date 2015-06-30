@@ -162,19 +162,17 @@ typedef struct sprite {
     const uint16_t *data;
 } sprite;
 
-sprite test0Legs = {.width = 3, .height = 7, .xoffset = -3, .yoffset = 1, .data = lander0Legs};
-sprite test1Legs = {.width = 4, .height = 7, .xoffset = -3, .yoffset = 2, .data = lander1Legs};
-sprite test2Legs = {.width = 6, .height = 7, .xoffset = -3, .yoffset = 3, .data = lander2Legs};
-sprite test3Legs = {.width = 7, .height = 5, .xoffset = -2, .yoffset = 4, .data = lander3Legs};
-
-sprite test4Legs = {.width = 5, .height = 3, .xoffset = 0, .yoffset = 3, .data = lander4Legs};
-
-sprite test5Legs = {.width = 7, .height = 5, .xoffset = 1, .yoffset = 4, .data = lander5Legs};
-sprite test6Legs = {.width = 6, .height = 7, .xoffset = 3, .yoffset = 3, .data = lander6Legs};
-sprite test7Legs = {.width = 4, .height = 7, .xoffset = 4, .yoffset = 2, .data = lander7Legs};
-sprite test8Legs = {.width = 3, .height = 7, .xoffset = 5, .yoffset = 1, .data = lander8Legs};
-sprite *landerSprite[9] = {&test0Legs, &test1Legs, &test2Legs, &test3Legs, &test4Legs,
-                           &test5Legs, &test6Legs, &test7Legs, &test8Legs};
+sprite leg0 = {.width = 3, .height = 7, .xoffset = -3, .yoffset = 1, .data = lander0Legs};
+sprite leg1 = {.width = 4, .height = 7, .xoffset = -3, .yoffset = 2, .data = lander1Legs};
+sprite leg2 = {.width = 6, .height = 7, .xoffset = -3, .yoffset = 3, .data = lander2Legs};
+sprite leg3 = {.width = 7, .height = 5, .xoffset = -2, .yoffset = 4, .data = lander3Legs};
+sprite leg4 = {.width = 5, .height = 3, .xoffset = 0, .yoffset = 3, .data = lander4Legs};
+sprite leg5 = {.width = 7, .height = 5, .xoffset = 1, .yoffset = 4, .data = lander5Legs};
+sprite leg6 = {.width = 6, .height = 7, .xoffset = 3, .yoffset = 3, .data = lander6Legs};
+sprite leg7 = {.width = 4, .height = 7, .xoffset = 4, .yoffset = 2, .data = lander7Legs};
+sprite leg8 = {.width = 3, .height = 7, .xoffset = 5, .yoffset = 1, .data = lander8Legs};
+sprite *landerSprite[9] = {&leg0, &leg1, &leg2, &leg3, &leg4,
+                           &leg5, &leg6, &leg7, &leg8};
 
 
 #endif //LUNAR_LANDER_IMAGES_H

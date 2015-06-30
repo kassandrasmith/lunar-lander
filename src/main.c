@@ -14,9 +14,9 @@
 #include "driverlib/interrupt.h"
 #include "../inc/debugging_utilities.h"
 #include "../inc/computations.h"
-#include "../inc/sound.h"
+#include "inc/tm4c123gh6pm.h"
 //unused for now TODO delete them at the end
-// #include "inc/tm4c123gh6pm.h"
+//#include "../inc/sound.h"
 //#include "driverlib/sysctl.h"
 //#include "driverlib/gpio.h"
 //#include "driverlib/timer.h"
