@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <inc/hw_memmap.h>
+#include <sys/types.h>
 #include "inc/hw_ints.h"
-#include "inc/tm4c123gh6pm.h"
 #include "../inc/buttons.h"
 #include "../inc/LCD.h"
 #include "../inc/initialization.h"
@@ -12,12 +12,14 @@
 #include "driverlib/systick.h"
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/gpio.h"
-#include "driverlib/timer.h"
 #include "../inc/debugging_utilities.h"
 #include "../inc/computations.h"
 #include "../inc/sound.h"
+//unused for now TODO delete them at the end
+// #include "inc/tm4c123gh6pm.h"
+//#include "driverlib/sysctl.h"
+//#include "driverlib/gpio.h"
+//#include "driverlib/timer.h"
 
 #define FRAME_RATE 30
 #define SOUND_RATE 4
@@ -195,8 +197,7 @@ void check(void) {
 }
 
 void render(void) {
-    sprite sprite = *landerSprites[angle];
-    // testsprite testsprite = *testLanderSprite[angle];
+    sprite sprite = *landerSprite[angle];
     write(score, fuel, seconds); //time);
 
     if (time % FRAME_RATE == 0) {
@@ -210,18 +211,17 @@ void render(void) {
     oldyposit = yposit;
     width = sprite.width;
     height = sprite.height;
+    xoffset = sprite.xoffset;
+    yoffset = sprite.yoffset;
     const uint16_t *data = sprite.data;
-    draw_bitmap((int16_t) xposit, (int16_t) yposit, data, width, height);
-    /*
-    width = testsprite.width;
-    height = testsprite.height;
-    xoffset = testsprite.xoffset;
-    yoffset = testsprite.yoffset;
-    const uint16_t *data = testsprite.data;
     draw_bitmap((int16_t) xposit, (int16_t) yposit, landerBody, 5, 6);
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
-     */
-    refresh();
+
+
+    //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);
+    draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + width), black, 2,
+                10);
+    draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 3);
 }
 
 //Output some sort of death message
@@ -294,11 +294,6 @@ void draw_terrain(void) {
     }
 }
 
-void refresh(void) {
-    draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 3);
-    draw_bitmap(oldxposit - 2, oldyposit, black, 1, height + 2);
-    draw_bitmap(oldxposit + 10, oldyposit, black, 1, height + 2);
-}
 
 int newterrainy;
 bool detect_collision(void) {

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include "inc/tm4c123gh6pm.h"
 #include "../inc/LCD.h"
+#include "../inc/main.h"
 #include "driverlib/timer.h"
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -9,6 +10,7 @@
 #include "inc/hw_types.h"
 #include "driverlib/interrupt.h"
 uint32_t g_ui32Flags;
+
 
 // 6-bit 64-element sine wave
 const unsigned short sineWave[64] = {
@@ -34,6 +36,8 @@ void sound_handler(void) {
     //print on screen for debug
     draw_dec(5, 5, i);
     draw_dec(5, 6, sineWave[i]);
+
     IntDisable(INT_TIMER2A);
     SysTickEnable();
+
 }

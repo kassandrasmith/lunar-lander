@@ -17,7 +17,6 @@ void land(void);
 void draw_terrain(void);
 
 void write(uint16_t score, uint16_t fuel, uint16_t seconds);
-void refresh(void);
 void start_screen(void);
 bool detect_collision(void);
 
