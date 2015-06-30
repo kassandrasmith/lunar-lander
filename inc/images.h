@@ -44,8 +44,81 @@ const uint16_t lander0Legs[] = {
 };
 
 
+const uint16_t lander8Legs[] = {
+        BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK,
+        WHITE, BLACK, BLACK,
+        BLACK, BLACK, BLACK,
+        WHITE, BLACK, BLACK,
+        BLACK, WHITE, BLACK,
+        BLACK, BLACK, BLACK,
+};
+
+// 4 x 7
+
+const uint16_t lander1Legs[] = {
+        BLACK, BLACK, BLACK, BLACK,
+        BLACK, BLACK, WHITE, BLACK,
+        BLACK, BLACK, BLACK, WHITE,
+        BLACK, BLACK, BLACK, WHITE,
+        BLACK, BLACK, BLACK, WHITE,
+        BLACK, WHITE, WHITE, WHITE,
+        BLACK, BLACK, BLACK, BLACK,
+
+};
+
+const uint16_t lander7Legs[] = {
+        BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK,
+        WHITE, BLACK, BLACK, BLACK,
+        WHITE, BLACK, BLACK, BLACK,
+        WHITE, BLACK, BLACK, BLACK,
+        WHITE, WHITE, WHITE, BLACK,
+        BLACK, BLACK, BLACK, BLACK,
+};
+
+// 7 x 5
+
+const uint16_t lander3Legs[] = {
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK,
+        BLACK, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK,
+        BLACK, WHITE, WHITE, BLACK, WHITE, WHITE, BLACK,
+        BLACK, BLACK, WHITE, WHITE, BLACK, WHITE, BLACK,
 
 
+};
+
+const uint16_t lander5Legs[] = {
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, WHITE, BLACK, WHITE, WHITE, BLACK,
+        BLACK, WHITE, BLACK, WHITE, WHITE, BLACK, BLACK,
+};
+
+// 6 x 7
+
+const uint16_t lander2Legs[] = {
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, BLACK, BLACK, BLACK, WHITE, BLACK,
+        BLACK, BLACK, BLACK, BLACK, WHITE, BLACK,
+        BLACK, BLACK, BLACK, BLACK, BLACK, WHITE,
+        BLACK, WHITE, WHITE, BLACK, BLACK, WHITE,
+        BLACK, BLACK, BLACK, WHITE, WHITE, BLACK,
+        BLACK, BLACK, BLACK, BLACK, WHITE, BLACK,
+
+};
+
+const uint16_t lander6Legs[] = {
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK, BLACK, BLACK,
+        WHITE, BLACK, BLACK, BLACK, BLACK, BLACK,
+        WHITE, BLACK, BLACK, WHITE, WHITE, BLACK,
+        BLACK, WHITE, WHITE, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK, BLACK, BLACK,
+};
 
 
 const uint16_t lander4Image[] = {
@@ -235,9 +308,17 @@ typedef struct testsprite {
     const uint16_t *data;
 } testsprite;
 
+testsprite test0Legs = {.width = 3, .height = 7, .xoffset = -4, .yoffset = 1,.data = lander0Legs};
+ testsprite test1Legs = {.width = 4, .height = 7, .xoffset = 4, .yoffset = 1,.data = lander1Legs};
+ testsprite test2Legs = {.width = 6, .height = 7, .xoffset = 4, .yoffset = 1,.data = lander2Legs};
+ testsprite test3Legs = {.width = 7, .height = 5, .xoffset = 4, .yoffset = 1,.data = lander3Legs};
 
 testsprite test4Legs = {.width = 5, .height = 3, .xoffset = 0, .yoffset = 3, .data = lander4Legs};
-testsprite test0Legs = {.width = 3, .height = 7, .xoffset = -4, .yoffset = 1,.data = lander0Legs};
+
+ testsprite test5Legs = {.width = 7, .height = 5, .xoffset = 4, .yoffset = 1,.data = lander5Legs};
+ testsprite test6Legs = {.width = 6, .height = 7, .xoffset = 4, .yoffset = 1,.data = lander6Legs};
+ testsprite test7Legs = {.width = 4, .height = 7, .xoffset = 4, .yoffset = 1,.data = lander7Legs};
+ testsprite test8Legs = {.width = 3, .height = 7, .xoffset = 4, .yoffset = 1,.data = lander8Legs};
 testsprite *testLanderSprite[9] = {&test0Legs, &test4Legs, &test4Legs, &test4Legs, &test4Legs,
                               &test4Legs, &test4Legs, &test4Legs, &test0Legs};
 
