@@ -79,17 +79,22 @@ bool buttonPressed;
 void game_loop() {
     if (endGame && buttonPressed) {
         endGame = 0;
-        playGame = 1;
-        start_screen();
-    }
-
-    if (startGame) {
-        start_screen();
-        check();
         startGame = 0;
         playGame = 1;
+        start_screen();
+    }
+    if (startGame) {
+        startGame = 0;
+        playGame = 1;
+        endGame = 0;
+        start_screen();
+        check();
+
     }
     else if (playGame) {
+        playGame = 1;
+        startGame = 0;
+        endGame = 0;
         process_input();
         update();
         check();
@@ -99,9 +104,14 @@ void game_loop() {
 
     }
     else if (endGame) {
+        playGame = 0;
+        endGame = 1;
+        startGame = 0;
         process_input();
         tick();
-        toggleLED(FRAME_RATE);      //Debugging heartbeat
+//        toggleLED2(FRAME_RATE);      //Debugging heartbeat
+        ttime = 0;
+
     }
     SysTickDisable();
 
@@ -126,7 +136,7 @@ void process_input(void) {
 
     if (!noFuel && jetButtonPressed) {
         fuel--;             //using fuel
-        thrusterAccel = -2.5f;
+        thrusterAccel = 2.5f;
     } else {
         thrusterAccel = 0.0;
     }
@@ -150,17 +160,8 @@ void process_input(void) {
 
 void update(void) {
     time++;
-/*
-    yaccel = sinAngle(angle) * accel;
-    if (jetButtonPressed) {
-        xaccel = cosAngle(angle) * accel;
-    }
-    else {
-        xaccel = 0;
-    }
-*/
 
-    yaccel = sinAngle(angle) * thrusterAccel + GRAVITY;
+    yaccel = sinAngle(angle) * (-thrusterAccel) + GRAVITY;
     xaccel = cosAngle(angle) * thrusterAccel;
 
     yvelocity += yaccel * ttime;
@@ -168,6 +169,7 @@ void update(void) {
 
     yposit += yvelocity * ttime;
     xposit += xvelocity * ttime;
+
 }
 //"check" the things that will kill you
 void check(void) {
@@ -227,8 +229,8 @@ void render(void) {
 //Output some sort of death message
 void die(DeathType_t deathtype) {
     //fill_background(BLACK);
-    xvelocity = 0;
-    yvelocity = 0;
+    endGame = 1;
+    playGame = 0;
     draw_string(6, 6, "You died!", (int16_t) WHITE);
     switch (deathtype) {
         case CRASHED:
@@ -245,31 +247,30 @@ void die(DeathType_t deathtype) {
             //write_score(score);
             break;
     }
-    endGame = 1;
+
 }
 
 void land(void) {
     // fill_background(BLACK);
-    xvelocity = 0;
-    yvelocity = 0;
+    endGame = 1;
+    playGame = 0;
     oldxposit = 0;
     draw_string(6, 6, "You landed!", (int16_t) WHITE);
     if (fuel > 0) {
         draw_string(6, 7, "Fuel left:", (int16_t) WHITE);
         draw_dec(6, 8, fuel);
     }
-    endGame = 1;
+
 }
 
 void write(uint16_t score, uint16_t fuel, uint16_t seconds) {
     draw_string(0, 0, "s:", (int16_t) WHITE);
-    draw_dec(2, 0, score);
     draw_string(0, 1, "f:", (int16_t) WHITE);
+    draw_string(0, 2, "t:", (int16_t) WHITE);
+    draw_dec(2, 0, score);
     draw_dec(2, 1, fuel);
-
     //FIXME: The seconds doesn't draw a leading zero for the tens place.
     //This leads to strange behaviour at the start of a new minute
-    draw_string(0, 2, "t:", (int16_t) WHITE);
     //FIXME: Doesn't handle over 10 minutes
     uint8_t min = (uint8_t) (seconds / 60);
     draw_dec(2, 2, min);
@@ -299,7 +300,7 @@ int newterrainy;
 bool detect_collision(void) {
     for (int i = (int) xposit; i < xposit + 8; i++) {
         newterrainy = storeTerrainY[i];
-        if (yposit >= newterrainy) {
+        if (yposit + height >= newterrainy) {
             return true;
         }
     }
