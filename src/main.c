@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <inc/hw_memmap.h>
 #include <sys/types.h>
-#include "inc/hw_ints.h"
 #include "../inc/buttons.h"
 #include "../inc/LCD.h"
 #include "../inc/initialization.h"
@@ -22,7 +21,8 @@
 //#include "driverlib/timer.h"
 
 #define FRAME_RATE 30
-#define SOUND_RATE 4
+#define SOUND_RATE 1
+
 #define GRAVITY 1.5f
 //declare global variables
 uint16_t score = 0;
@@ -53,7 +53,6 @@ int16_t xoffset;
 int16_t yoffset;
 int storeTerrainY[WIDTH];
 
-
 int main(void) {
     //Initializations board connections
     IntMasterDisable();         //Interrupts must be disabled here to prevent unwanted triggering
@@ -66,7 +65,7 @@ int main(void) {
     //Initialize interrupts
     FPULazyStackingEnable();
     sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
-    sysTick_init(FRAME_RATE);   //Initializes Systick interrupt to handle game loop
+    game_loop_init(FRAME_RATE);   //Initializes Systick interrupt to handle game loop
     IntMasterEnable();          //end of initializations, enable interrupts
 
     start_screen();             // set screen to initial state
@@ -94,8 +93,6 @@ void game_loop() {
         check();
         render();
         tick();
-        toggleLED(FRAME_RATE);      //Debugging heartbeat
-
     }
     else if (endGame) {
         playGame = 0;
@@ -112,8 +109,8 @@ void game_loop() {
         startGame = 1;
     }
 
-    //   SysTickDisable();
-    //   IntEnable(INT_TIMER2A);
+    toggleLED(FRAME_RATE);      //Debugging heartbeat
+
 }
 
 bool jetButtonPressed;
@@ -125,6 +122,7 @@ void process_input(void) {
     bool noFuel = fuel == 0;
     buttonPressed = jetButtonPressed || rightButtonPressed || leftButtonPressed;
 
+    #define ONBOARDBUTTONS
 #ifdef ONBOARDBUTTONS
     uint8_t buttonState = ButtonsPoll(0, 0);
     leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
@@ -197,7 +195,7 @@ void check(void) {
 
 void render(void) {
     sprite sprite = *landerSprite[angle];
-    write(score, fuel, seconds); //time);
+    write(score, fuel, seconds);
 
     if (time % FRAME_RATE == 0) {
         //write_time(seconds);
@@ -221,6 +219,7 @@ void render(void) {
     draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + width), black, 2,
                 10);
     draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 5);
+
 }
 
 //Output some sort of death message
@@ -292,9 +291,8 @@ void draw_terrain(void) {
     }
 }
 
-
-int newterrainy;
 bool detect_collision(void) {
+    int newterrainy;
     for (int i = (int) xposit; i < xposit + 8; i++) {
         newterrainy = storeTerrainY[i];
         if (yposit + height >= newterrainy) {

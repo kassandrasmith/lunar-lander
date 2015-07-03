@@ -6,7 +6,7 @@
 #define BLACK 0x0000
 #define WHITE 0xFFFF
 
-const uint16_t test[] = {
+const uint16_t test_image[] = {
         WHITE, WHITE, WHITE, WHITE,
         WHITE, WHITE, WHITE, WHITE,
         WHITE, WHITE, WHITE, WHITE,

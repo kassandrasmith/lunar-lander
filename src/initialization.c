@@ -11,6 +11,7 @@
 #include "driverlib/rom_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
+#include "inc/hw_ints.h"
 #include "../inc/sound.h"
 #include "../inc/main.h"
 
@@ -59,7 +60,7 @@ void PortE_Init(void) {
 }
 
 //Sound Init is the initialization of Timer 2A, which will be where we play sound from
-void sound_init(int soundRate) {
+void sound_init(const uint16_t soundRate) {
 
     uint32_t TIMER_DEBUG = TIMER2_BASE;
     uint32_t INTERRUPT_NUM = INT_TIMER2A;
@@ -70,7 +71,8 @@ void sound_init(int soundRate) {
     IntMasterEnable();
     TimerConfigure(TIMER_DEBUG, TIMER_CFG_PERIODIC);
     //Trigger an interrupt ever (1 / soundRate) of a second
-    TimerLoadSet(TIMER_DEBUG, AORB, SysCtlClockGet() / soundRate);
+    uint32_t period = SysCtlClockGet() / soundRate;
+    TimerLoadSet(TIMER_DEBUG, AORB, period - 1);
     IntPrioritySet(INTERRUPT_NUM, 0);
     // Setup the interrupts for the timer timeouts.
     IntEnable(INTERRUPT_NUM);
@@ -79,10 +81,21 @@ void sound_init(int soundRate) {
     TimerEnable(TIMER_DEBUG, AORB);
 }
 
-void sysTick_init(int frameRate) {
-// Trigger an interrupt every (1 / frame rate) of a second.
-// The period is in clock cycles, so we'll use a function from the libraries to fetch the clock config.
-    SysTickPeriodSet(SysCtlClockGet() / frameRate);
-    SysTickEnable();
-    SysTickIntEnable();
+void game_loop_init(const uint16_t frameRate) {
+    uint32_t TIMER_DEBUG = TIMER1_BASE;
+    uint32_t INTERRUPT_NUM = INT_TIMER1A;
+    uint32_t AORB = TIMER_A;
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+    IntMasterEnable();
+    TimerConfigure(TIMER_DEBUG, TIMER_CFG_PERIODIC);
+    //Trigger an interrupt ever (1 / soundRate) of a second
+    uint32_t period = SysCtlClockGet() / frameRate;
+    TimerLoadSet(TIMER_DEBUG, AORB, period - 1);
+    IntPrioritySet(INTERRUPT_NUM, 0);
+    // Setup the interrupts for the timer timeouts.
+    IntEnable(INTERRUPT_NUM);
+    TimerIntEnable(TIMER_DEBUG, TIMER_TIMA_TIMEOUT);
+    // Enable the timers.
+    TimerEnable(TIMER_DEBUG, AORB);
 }

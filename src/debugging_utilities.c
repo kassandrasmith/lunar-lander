@@ -20,14 +20,18 @@ void tick(){
 }
 
 void write_velocities(float xvel, float yvel) {
+    #ifdef DEBUG
     draw_string(0, 3, "xv:", WHITE);
     draw_dec(3, 3, (uint32_t) (xvel * 1000u));
     draw_string(0, 4, "yv:", WHITE);
     draw_dec(3, 4, (uint32_t) (yvel * 1000u));
+    #endif
 }
 
 void write_angle(int16_t angle) {
+    #ifdef DEBUG
     draw_string(0, 5, "a:", WHITE);
     draw_dec(3, 5, (uint32_t) angle);
+    #endif
 }
 

@@ -27,17 +27,12 @@ void sound_handler(void) {
     GPIO_PORTB_DATA_R = sineWave[i];
     //increment array
     i++;
-    //keep variable under 64 bits
+    //keep variable on [0,63]
     i %= 64;
-    // Toggle the flag for the second timer.
-    HWREGBITW(&g_ui32Flags, 1) ^= 1;
     // Use the flags to Toggle the LED for this timer
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, g_ui32Flags << 1);
+    GPIO_PORTF_DATA_R ^= 0x04;
     //print on screen for debug
-    draw_dec(5, 5, i);
-    draw_dec(5, 6, sineWave[i]);
-
-    // IntDisable(INT_TIMER2A);
-    // SysTickEnable();
+    //draw_dec(5, 5, i);
+    //draw_dec(5, 6, sineWave[i]);
 
 }

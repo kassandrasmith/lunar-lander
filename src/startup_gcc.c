@@ -78,7 +78,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
     IntDefaultHandler,                      // The PendSV handler
-    game_loop,                              // The SysTick handler
+    IntDefaultHandler,                              // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
@@ -100,7 +100,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Watchdog timer
     IntDefaultHandler,                      // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
-    IntDefaultHandler,                      // Timer 1 subtimer A
+    game_loop,                      // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
     sound_handler,                          // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B

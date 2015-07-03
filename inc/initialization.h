@@ -11,8 +11,8 @@ void PortF_Init(void);
 
 void PortE_Init(void);
 
-void sound_init(int soundRate);
+void sound_init(const uint16_t soundRate);
 
-void sysTick_init(int frameRate);
+void game_loop_init(const uint16_t frameRate);
 
 #endif
