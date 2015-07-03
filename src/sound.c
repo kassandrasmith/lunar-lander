@@ -37,7 +37,7 @@ void sound_handler(void) {
     draw_dec(5, 5, i);
     draw_dec(5, 6, sineWave[i]);
 
-    IntDisable(INT_TIMER2A);
-    SysTickEnable();
+    // IntDisable(INT_TIMER2A);
+    // SysTickEnable();
 
 }

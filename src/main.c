@@ -77,19 +77,13 @@ int main(void) {
 
 bool buttonPressed;
 void game_loop() {
-    if (endGame && buttonPressed) {
-        endGame = 0;
-        startGame = 0;
-        playGame = 1;
-        start_screen();
-    }
+
     if (startGame) {
         startGame = 0;
         playGame = 1;
         endGame = 0;
         start_screen();
         check();
-
     }
     else if (playGame) {
         playGame = 1;
@@ -109,14 +103,17 @@ void game_loop() {
         startGame = 0;
         process_input();
         tick();
-//        toggleLED2(FRAME_RATE);      //Debugging heartbeat
-        ttime = 0;
+        // ttime = 0;
 
     }
-    SysTickDisable();
+    if (endGame && buttonPressed) {
+        endGame = 0;
+        playGame = 0;
+        startGame = 1;
+    }
 
-    // if (endGame) { IntDisable(INT_TIMER2A); }
-    IntEnable(INT_TIMER2A);
+    //   SysTickDisable();
+    //   IntEnable(INT_TIMER2A);
 }
 
 bool jetButtonPressed;
@@ -223,7 +220,7 @@ void render(void) {
     //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);
     draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + width), black, 2,
                 10);
-    draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 3);
+    draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 5);
 }
 
 //Output some sort of death message
