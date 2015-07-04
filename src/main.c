@@ -162,6 +162,7 @@ void update(void) {
     yvelocity += yaccel * ttime;
     xvelocity += xaccel * ttime;
 
+
     yposit += yvelocity * ttime;
     xposit += xvelocity * ttime;
 
@@ -211,15 +212,16 @@ void render(void) {
     xoffset = sprite.xoffset;
     yoffset = sprite.yoffset;
     const uint16_t *data = sprite.data;
-    draw_bitmap((int16_t) xposit, (int16_t) yposit, landerBody, 5, 6);
+
+    //Draw the legs of the lander
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
 
 
-    //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);
-    draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + width), black, 2,
-                10);
-    draw_bitmap(oldxposit - 5, oldyposit - 8, black, 13, 5);
 
+    //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);
+    //   draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + height) , black, 2, 10);
+    //   draw_bitmap((int16_t) (xposit - 2 + xoffset), (int16_t) (oldyposit + 6 +  height) , black, 2, 10);
+    draw_bitmap(oldxposit - 5, oldyposit - 9, black, 13, 5);
 }
 
 //Output some sort of death message
