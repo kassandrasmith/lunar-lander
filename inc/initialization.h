@@ -15,4 +15,5 @@ void sound_init(const uint16_t soundRate);
 
 void game_loop_init(const uint16_t frameRate);
 
+void button_Interrupt_Init(void);
 #endif

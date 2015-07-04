@@ -15,14 +15,13 @@
 #include "../inc/computations.h"
 #include "inc/tm4c123gh6pm.h"
 //unused for now TODO delete them at the end
-//#include "../inc/sound.h"
+#include "../inc/sound.h"
 //#include "driverlib/sysctl.h"
 //#include "driverlib/gpio.h"
 //#include "driverlib/timer.h"
 
 #define FRAME_RATE 30
 #define SOUND_RATE 1
-
 #define GRAVITY 1.5f
 //declare global variables
 uint16_t score = 0;
@@ -93,6 +92,7 @@ void game_loop() {
         check();
         render();
         tick();
+
     }
     else if (endGame) {
         playGame = 0;
@@ -309,4 +309,28 @@ void start_screen(void) {
     yposit = 9;
     fill_background(BLACK);
     draw_terrain();
+}
+
+void buttonPushed(void) {
+    if (GPIOIntStatus(GPIO_PORTF_BASE, false) & GPIO_PIN_4) {
+        // PF4 was interrupt cause
+        printf("Button Down\n");
+        GPIOIntRegister(GPIO_PORTF_BASE,
+                        buttonReleased);   // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4,
+                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
+        GPIOIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);  // Clear interrupt flag
+    }
+}
+
+void buttonReleased(void) {
+    if (GPIOIntStatus(GPIO_PORTF_BASE, false) & GPIO_PIN_4) {
+        // PF4 was interrupt cause
+        printf("Button Up\n");
+        GPIOIntRegister(GPIO_PORTF_BASE, buttonPushed); // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4,
+                       GPIO_FALLING_EDGE);         // Configure PF4 for falling edge trigger
+        GPIOIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);  // Clear interrupt flag
+    }
+
 }
