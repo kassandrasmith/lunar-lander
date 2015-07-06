@@ -44,8 +44,8 @@ float thrusterAccel;
 int endGame = 0;
 int startGame = 1;
 int playGame = 0;
-float oldxposit;
-float oldyposit;
+float oldxposit = 5;
+float oldyposit = 64;
 int16_t width;
 int16_t height;
 int16_t xoffset;
@@ -162,6 +162,8 @@ void update(void) {
     yvelocity += yaccel * ttime;
     xvelocity += xaccel * ttime;
 
+    oldxposit += xposit;
+    oldyposit += yposit + yvelocity * ttime;
 
     yposit += yvelocity * ttime;
     xposit += xvelocity * ttime;
@@ -205,8 +207,7 @@ void render(void) {
 
     write_velocities(xvelocity, yvelocity);
     write_angle(angle);
-    oldxposit = xposit;
-    oldyposit = yposit;
+
     width = sprite.width;
     height = sprite.height;
     xoffset = sprite.xoffset;
@@ -215,13 +216,14 @@ void render(void) {
 
     //Draw the legs of the lander
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
-
+    draw_bitmap(oldxposit + 6, oldyposit + yposit, blue, 13, 5);
 
 
     //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);
     //   draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + height) , black, 2, 10);
     //   draw_bitmap((int16_t) (xposit - 2 + xoffset), (int16_t) (oldyposit + 6 +  height) , black, 2, 10);
-    draw_bitmap(oldxposit - 5, oldyposit - 9, black, 13, 5);
+    // draw_bitmap(oldxposit - 5, oldyposit - 9, blue, 13, 5);
+
 }
 
 //Output some sort of death message

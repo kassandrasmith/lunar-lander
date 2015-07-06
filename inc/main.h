@@ -24,5 +24,4 @@ void buttonPushed(void);
 
 void buttonReleased(void);
 
-
 #endif //LUNAR_LANDER_MAIN_H

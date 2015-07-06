@@ -63,7 +63,7 @@ void PortE_Init(void) {
 void sound_init(const uint16_t soundRate) {
 
     uint32_t TIMER_DEBUG = TIMER2_BASE;
-    uint32_t INTERRUPT_NUM = INT_TIMER2A;
+    uint32_t INTERRUPT_NUM = INT_TIMER2A_TM4C123; //INT_TIMER2A;
     uint32_t AORB = TIMER_A;
 
 
@@ -109,7 +109,7 @@ void button_Interrupt_Init(void) {
 
 void game_loop_init(const uint16_t frameRate) {
     uint32_t TIMER_DEBUG = TIMER1_BASE;
-    uint32_t INTERRUPT_NUM = INT_TIMER1A;
+    uint32_t INTERRUPT_NUM = INT_TIMER1A_TM4C123; //maybe remove _TM4C123;
     uint32_t AORB = TIMER_A;
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
