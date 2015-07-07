@@ -313,26 +313,78 @@ void start_screen(void) {
     draw_terrain();
 }
 
+
 void buttonPushed(void) {
+
+    //debugging interrupt
     if (GPIOIntStatus(GPIO_PORTF_BASE, false) & GPIO_PIN_4) {
-        // PF4 was interrupt cause
-        printf("Button Down\n");
+
         GPIOIntRegister(GPIO_PORTF_BASE,
                         buttonReleased);   // Register our handler function for port F
         GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4,
                        GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
         GPIOIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);  // Clear interrupt flag
     }
+
+    //Button interrupts for gameplay buttons
+
+    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_0) {
+
+        GPIOIntRegister(GPIO_PORTE_BASE,
+                        buttonReleased);   // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0,
+                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
+        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);  // Clear interrupt flag
+    }
+    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_1) {
+        GPIOIntRegister(GPIO_PORTE_BASE,
+                        buttonReleased);   // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_1,
+                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
+        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);  // Clear interrupt flag
+    }
+    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_2) {
+        GPIOIntRegister(GPIO_PORTE_BASE,
+                        buttonReleased);   // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_2,
+                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
+        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_2);  // Clear interrupt flag
+    }
+
+
 }
 
 void buttonReleased(void) {
+
     if (GPIOIntStatus(GPIO_PORTF_BASE, false) & GPIO_PIN_4) {
-        // PF4 was interrupt cause
-        printf("Button Up\n");
         GPIOIntRegister(GPIO_PORTF_BASE, buttonPushed); // Register our handler function for port F
         GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4,
                        GPIO_FALLING_EDGE);         // Configure PF4 for falling edge trigger
         GPIOIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);  // Clear interrupt flag
     }
 
+    //Button interrupts for gameplay buttons
+
+    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_0) {
+
+        GPIOIntRegister(GPIO_PORTE_BASE,
+                        buttonPushed);   // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0,
+                       GPIO_FALLING_EDGE);          // Configure PF4 for rising edge trigger
+        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);  // Clear interrupt flag
+    }
+    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_1) {
+        GPIOIntRegister(GPIO_PORTE_BASE,
+                        buttonPushed);   // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_1,
+                       GPIO_FALLING_EDGE);          // Configure PF4 for rising edge trigger
+        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);  // Clear interrupt flag
+    }
+    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_2) {
+        GPIOIntRegister(GPIO_PORTE_BASE,
+                        buttonPushed);   // Register our handler function for port F
+        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_2,
+                       GPIO_FALLING_EDGE);          // Configure PF4 for rising edge trigger
+        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_2);  // Clear interrupt flag
+    }
 }
