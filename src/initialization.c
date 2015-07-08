@@ -11,6 +11,7 @@
 #include "driverlib/rom_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
+#include "inc/hw_gpio.h"
 #include "inc/hw_ints.h"
 #include "../inc/sound.h"
 #include "../inc/main.h"
@@ -41,7 +42,6 @@ void DAC_Init(void) {
 //PF3-1 are different LEDs
 void PortF_Init(void) {
     unsigned long volatile delay;
-
     //Port F initialization
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
@@ -66,7 +66,6 @@ void sound_init(const uint16_t soundRate) {
     uint32_t INTERRUPT_NUM = INT_TIMER2A_TM4C123; //INT_TIMER2A;
     uint32_t AORB = TIMER_A;
 
-
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
     IntMasterEnable();
     TimerConfigure(TIMER_DEBUG, TIMER_CFG_PERIODIC);
@@ -80,31 +79,6 @@ void sound_init(const uint16_t soundRate) {
     // Enable the timers.
     TimerEnable(TIMER_DEBUG, AORB);
 }
-
-void button_Interrupt_Init(void) {
-    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_XTAL_16MHZ);
-
-    // Pin F4 setup
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);        // Enable port F
-    GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);  // Init PF4 as input
-    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4,
-                     GPIO_STRENGTH_2MA,
-                     GPIO_PIN_TYPE_STD_WPU);  // Enable weak pullup resistor for PF4
-
-    // Interrupt setuü
-    GPIOIntDisable(GPIO_PORTF_BASE,
-                   GPIO_PIN_4);        // Disable interrupt for PF4 (in case it was enabled)
-    GPIOIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);      // Clear pending interrupts for PF4
-    GPIOIntRegister(GPIO_PORTF_BASE, buttonPushed);     // Register our handler function for port F
-    GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4,
-                   GPIO_FALLING_EDGE);             // Configure PF4 for falling edge trigger
-    GPIOIntEnable(GPIO_PORTF_BASE, GPIO_PIN_4);     // Enable interrupt for PF4
-
-
-}
-
-
-
 
 
 void game_loop_init(const uint16_t frameRate) {
@@ -124,4 +98,12 @@ void game_loop_init(const uint16_t frameRate) {
     TimerIntEnable(TIMER_DEBUG, TIMER_TIMA_TIMEOUT);
     // Enable the timers.
     TimerEnable(TIMER_DEBUG, AORB);
+}
+
+void button_Interrupt_Init(void) {
+    //   SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_XTAL_16MHZ);
+    GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2, GPIO_FALLING_EDGE);
+    GPIOIntRegister(GPIO_PORTE_BASE, buttonPushed);
+    GPIOIntEnable(GPIO_PORTE_BASE, GPIO_INT_PIN_0 | GPIO_INT_PIN_1 | GPIO_INT_PIN_2);
+    IntPrioritySet(GPIO_PORTE_BASE, 0);
 }

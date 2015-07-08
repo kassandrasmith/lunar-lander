@@ -44,8 +44,8 @@ float thrusterAccel;
 int endGame = 0;
 int startGame = 1;
 int playGame = 0;
-float oldxposit = 5;
-float oldyposit = 64;
+float oldyposit = 5;
+float oldxposit = 64;
 int16_t width;
 int16_t height;
 int16_t xoffset;
@@ -129,21 +129,21 @@ void process_input(void) {
     rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
 #endif
 
-    if (!noFuel && jetButtonPressed) {
+/*    if (!noFuel && jetButtonPressed) {
         fuel--;             //using fuel
         thrusterAccel = 2.5f;
     } else {
         thrusterAccel = 0.0;
-    }
+    } */
     if (noFuel | !jetButtonPressed) {
         accel = 1.0;
     }
-    if (leftButtonPressed) {
+/*    if (leftButtonPressed) {
         angle--;
     }
     if (rightButtonPressed) {
         angle++;
-    }
+    } */
     if (angle <= 0) {
         angle = 0;
     }
@@ -162,11 +162,14 @@ void update(void) {
     yvelocity += yaccel * ttime;
     xvelocity += xaccel * ttime;
 
-    oldxposit += xposit;
-    oldyposit += yposit + yvelocity * ttime;
-
     yposit += yvelocity * ttime;
     xposit += xvelocity * ttime;
+
+
+    oldxposit = xposit;
+    //oldyposit += (oldyposit - xposit);
+    oldyposit += yposit + yvelocity * ttime;
+
 
 }
 //"check" the things that will kill you
@@ -214,9 +217,10 @@ void render(void) {
     yoffset = sprite.yoffset;
     const uint16_t *data = sprite.data;
 
-    //Draw the legs of the lander
+    //Draw the lander
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
-    draw_bitmap(oldxposit + 6, oldyposit + yposit, blue, 13, 5);
+    draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height), blue,
+                13, 5);
 
 
     //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);
@@ -315,76 +319,50 @@ void start_screen(void) {
 
 
 void buttonPushed(void) {
+    draw_string(3, 3, "PUSHED", WHITE);
+    uint32_t status = 0;
 
-    //debugging interrupt
-    if (GPIOIntStatus(GPIO_PORTF_BASE, false) & GPIO_PIN_4) {
+    status = GPIOIntStatus(GPIO_PORTE_BASE, true);
+    GPIOIntClear(GPIO_PORTE_BASE, status);
 
-        GPIOIntRegister(GPIO_PORTF_BASE,
-                        buttonReleased);   // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4,
-                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
-        GPIOIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);  // Clear interrupt flag
+    if ((status & GPIO_INT_PIN_0) == GPIO_INT_PIN_0) {
+        //Then there was a pin0 interrupt
+        if (fuel != 0) {
+            fuel--;             //using fuel
+            thrusterAccel = 2.5f;
+        }
+        else {
+            thrusterAccel = 0.0;
+        }
     }
 
-    //Button interrupts for gameplay buttons
-
-    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_0) {
-
-        GPIOIntRegister(GPIO_PORTE_BASE,
-                        buttonReleased);   // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0,
-                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
-        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);  // Clear interrupt flag
+    if ((status & GPIO_INT_PIN_1) == GPIO_INT_PIN_1) {
+        //Then there was a pin1 interrupt
+        angle--;
     }
-    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_1) {
-        GPIOIntRegister(GPIO_PORTE_BASE,
-                        buttonReleased);   // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_1,
-                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
-        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);  // Clear interrupt flag
-    }
-    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_2) {
-        GPIOIntRegister(GPIO_PORTE_BASE,
-                        buttonReleased);   // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_2,
-                       GPIO_RISING_EDGE);          // Configure PF4 for rising edge trigger
-        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_2);  // Clear interrupt flag
+    if ((status & GPIO_INT_PIN_2) == GPIO_INT_PIN_2) {
+        //Then there was a pin2 interrupt
+        angle++;
     }
 
+    draw_string(3, 3, "PUSHED", WHITE);
 
 }
 
-void buttonReleased(void) {
-
-    if (GPIOIntStatus(GPIO_PORTF_BASE, false) & GPIO_PIN_4) {
-        GPIOIntRegister(GPIO_PORTF_BASE, buttonPushed); // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4,
-                       GPIO_FALLING_EDGE);         // Configure PF4 for falling edge trigger
-        GPIOIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);  // Clear interrupt flag
+void jetButtonPushed(void) {
+    if (fuel != 0) {
+        fuel--;             //using fuel
+        thrusterAccel = 2.5f;
     }
-
-    //Button interrupts for gameplay buttons
-
-    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_0) {
-
-        GPIOIntRegister(GPIO_PORTE_BASE,
-                        buttonPushed);   // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0,
-                       GPIO_FALLING_EDGE);          // Configure PF4 for rising edge trigger
-        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);  // Clear interrupt flag
+    else {
+        thrusterAccel = 0.0;
     }
-    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_1) {
-        GPIOIntRegister(GPIO_PORTE_BASE,
-                        buttonPushed);   // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_1,
-                       GPIO_FALLING_EDGE);          // Configure PF4 for rising edge trigger
-        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);  // Clear interrupt flag
-    }
-    if (GPIOIntStatus(GPIO_PORTE_BASE, false) & GPIO_PIN_2) {
-        GPIOIntRegister(GPIO_PORTE_BASE,
-                        buttonPushed);   // Register our handler function for port F
-        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_2,
-                       GPIO_FALLING_EDGE);          // Configure PF4 for rising edge trigger
-        GPIOIntClear(GPIO_PORTE_BASE, GPIO_PIN_2);  // Clear interrupt flag
-    }
+}
+
+void leftButtonPushed(void) {
+    angle--;
+}
+
+void rightButtonPushed(void) {
+    angle++;
 }

@@ -22,6 +22,10 @@ bool detect_collision(void);
 
 void buttonPushed(void);
 
-void buttonReleased(void);
+void jetButtonPushed(void);
+
+void leftButtonPushed(void);
+
+void rightButtonPushed(void);
 
 #endif //LUNAR_LANDER_MAIN_H
