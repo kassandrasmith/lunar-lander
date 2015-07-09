@@ -1,8 +1,15 @@
+//TODO add music
+//TODO terrain generator
+//TODO clear velocity at the end of each play
+//TODO draw thrust
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <inc/hw_memmap.h>
 #include <sys/types.h>
+#include "inc/tm4c123gh6pm.h"
+#include <inc/hw_memmap.h>
+#include "../inc/debugging_utilities.h"
+#include "../inc/computations.h"
 #include "../inc/buttons.h"
 #include "../inc/LCD.h"
 #include "../inc/initialization.h"
@@ -11,9 +18,6 @@
 #include "driverlib/systick.h"
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
-#include "../inc/debugging_utilities.h"
-#include "../inc/computations.h"
-#include "inc/tm4c123gh6pm.h"
 //unused for now TODO delete them at the end
 #include "../inc/sound.h"
 //#include "driverlib/sysctl.h"
@@ -29,27 +33,21 @@ uint16_t time = 0;
 uint16_t seconds = 0;
 uint16_t fuel = 3000;
 char multiplier = 0;                //To be used to increase score according to where the lander lands
-float ttime = .07;                  //TODO set to refresh rate
-float yvelocity;                    //can be negative if vertical position is increasing
-float xvelocity;                    //negative value moves left, positive moves right
 float yposit = 9;                   //initialize to topmost of landscape-oriented screen
 float xposit = 64;                  //initialize to middle of landscape-oriented screen
+float oldxposit = 64;               //position where the lander was previously, to clear
+float oldyposit = 5;                //position where the lander was previously, to clear
+float yvelocity;                    //can be negative if vertical position is increasing
+float xvelocity;                    //negative value moves left, positive moves right
+float xaccel;                       //acceleration in the x direction
+float yaccel;                       //acceleration in the x direction
+float thrusterAccel;                //acceleration when the thrusters are enabled
 int16_t angle = 4;                  //4 points upwards, 0 leftwards, and 8 rightwards
-float accel;                        //negative value causes increase in vertical position
-
-float xaccel;
-float yaccel;
-float thrusterAccel;
-
-int endGame = 0;
+int endGame = 0;                    //initialize game states
 int startGame = 1;
 int playGame = 0;
-float oldyposit = 5;
-float oldxposit = 64;
-int16_t width;
-int16_t height;
-int16_t xoffset;
-int16_t yoffset;
+int16_t width;                      //width of lander
+int16_t height;                     //height of lander
 int storeTerrainY[WIDTH];
 
 int main(void) {
@@ -60,15 +58,13 @@ int main(void) {
     PortE_Init();               //Initialize hardware off-board buttons
     PortF_Init();               //Initializes on-board buttons and LEDs for debugging
     screen_init();              //Initializes screen
-
     //Initialize interrupts
     FPULazyStackingEnable();
     sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
     game_loop_init(FRAME_RATE);   //Initializes Systick interrupt to handle game loop
+    button_Interrupt_Init;
     IntMasterEnable();          //end of initializations, enable interrupts
-
     start_screen();             // set screen to initial state
-
     // We need to stall here and wait for the interrupts to trigger at regular intervals.
     while(true);
 }
@@ -122,28 +118,27 @@ void process_input(void) {
     bool noFuel = fuel == 0;
     buttonPressed = jetButtonPressed || rightButtonPressed || leftButtonPressed;
 
-    #define ONBOARDBUTTONS
+    //  #define ONBOARDBUTTONS
 #ifdef ONBOARDBUTTONS
     uint8_t buttonState = ButtonsPoll(0, 0);
     leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
     rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
 #endif
-
-/*    if (!noFuel && jetButtonPressed) {
+/*
+    if (!noFuel && jetButtonPressed) {
         fuel--;             //using fuel
         thrusterAccel = 2.5f;
     } else {
         thrusterAccel = 0.0;
-    } */
-    if (noFuel | !jetButtonPressed) {
-        accel = 1.0;
     }
-/*    if (leftButtonPressed) {
+ //   if (noFuel | !jetButtonPressed) {
+ //       accel = 1.0;}
+    if (leftButtonPressed) {
         angle--;
     }
     if (rightButtonPressed) {
         angle++;
-    } */
+    }*/
     if (angle <= 0) {
         angle = 0;
     }
@@ -154,6 +149,8 @@ void process_input(void) {
 //update location and time
 
 void update(void) {
+    float ttime = .07;                  //TODO set to refresh rate
+
     time++;
 
     yaccel = sinAngle(angle) * (-thrusterAccel) + GRAVITY;
@@ -163,11 +160,10 @@ void update(void) {
     xvelocity += xaccel * ttime;
 
     yposit += yvelocity * ttime;
-    xposit += xvelocity * ttime;
+    xposit += xvelocity * -ttime;
 
 
     oldxposit = xposit;
-    //oldyposit += (oldyposit - xposit);
     oldyposit += yposit + yvelocity * ttime;
 
 
@@ -200,6 +196,8 @@ void check(void) {
 }
 
 void render(void) {
+    int16_t xoffset;                    //offset of lander
+    int16_t yoffset;
     sprite sprite = *landerSprite[angle];
     write(score, fuel, seconds);
 
@@ -219,7 +217,7 @@ void render(void) {
 
     //Draw the lander
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
-    draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height), blue,
+    draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height), black,
                 13, 5);
 
 
@@ -313,6 +311,12 @@ bool detect_collision(void) {
 void start_screen(void) {
     xposit = 64;
     yposit = 9;
+    oldxposit = 64;
+    oldyposit = 5;
+    xvelocity = 0;
+    yvelocity = 0;
+    xaccel = 0;
+    yaccel = 0;
     fill_background(BLACK);
     draw_terrain();
 }
