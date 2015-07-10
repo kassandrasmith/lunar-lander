@@ -9,6 +9,7 @@
 #include "inc/hw_types.h"
 #include "inc/hw_memmap.h"
 #include "driverlib/rom_map.h"
+#include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 #include "inc/hw_gpio.h"
@@ -80,7 +81,7 @@ void sound_init(const uint16_t soundRate) {
     TimerEnable(TIMER_DEBUG, AORB);
 }
 
-
+//Game Loop Init initializes the Timer 1A, which loops through the game functions
 void game_loop_init(const uint16_t frameRate) {
     uint32_t TIMER_DEBUG = TIMER1_BASE;
     uint32_t INTERRUPT_NUM = INT_TIMER1A_TM4C123; //maybe remove _TM4C123;
@@ -100,10 +101,24 @@ void game_loop_init(const uint16_t frameRate) {
     TimerEnable(TIMER_DEBUG, AORB);
 }
 
-void button_Interrupt_Init(void) {
-    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_INT | SYSCTL_XTAL_16MHZ);
-    GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2, GPIO_FALLING_EDGE);
-    GPIOIntRegister(GPIO_PORTE_BASE, buttonPushed);
-    GPIOIntEnable(GPIO_PORTE_BASE, GPIO_INT_PIN_0 | GPIO_INT_PIN_1 | GPIO_INT_PIN_2);
-    IntPrioritySet(GPIO_PORTE_BASE, 0);
+
+//Button Interrupt Init initializes the Timer 0A, which services button pushes
+void button_Interrupt_Init(const uint16_t frameRate) {
+
+    uint32_t TIMER_DEBUG = TIMER0_BASE;
+    uint32_t INTERRUPT_NUM = INT_TIMER0A_TM4C123; //INT_TIMER2A;
+    uint32_t AORB = TIMER_A;
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+    IntMasterEnable();
+    TimerConfigure(TIMER_DEBUG, TIMER_CFG_PERIODIC);
+    //Trigger an interrupt ever (1 / soundRate) of a second
+    uint32_t period = SysCtlClockGet() / frameRate;
+    TimerLoadSet(TIMER_DEBUG, AORB, period - 1);
+    IntPrioritySet(INTERRUPT_NUM, 0);
+    // Setup the interrupts for the timer timeouts.
+    IntEnable(INTERRUPT_NUM);
+    TimerIntEnable(TIMER_DEBUG, TIMER_TIMA_TIMEOUT);
+    // Enable the timers.
+    TimerEnable(TIMER_DEBUG, AORB);
 }

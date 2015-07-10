@@ -48,6 +48,7 @@ int startGame = 1;
 int playGame = 0;
 int16_t width;                      //width of lander
 int16_t height;                     //height of lander
+bool buttonPressed;
 int storeTerrainY[WIDTH];
 
 int main(void) {
@@ -60,16 +61,16 @@ int main(void) {
     screen_init();              //Initializes screen
     //Initialize interrupts
     FPULazyStackingEnable();
-    sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
+    //   sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
     game_loop_init(FRAME_RATE);   //Initializes Systick interrupt to handle game loop
-    button_Interrupt_Init;
+    button_Interrupt_Init(10);
     IntMasterEnable();          //end of initializations, enable interrupts
     start_screen();             // set screen to initial state
     // We need to stall here and wait for the interrupts to trigger at regular intervals.
     while(true);
 }
 
-bool buttonPressed;
+
 void game_loop() {
 
     if (startGame) {
@@ -111,34 +112,6 @@ void game_loop() {
 
 bool jetButtonPressed;
 void process_input(void) {
-
-    jetButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
-    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
-    bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
-    bool noFuel = fuel == 0;
-    buttonPressed = jetButtonPressed || rightButtonPressed || leftButtonPressed;
-
-    //  #define ONBOARDBUTTONS
-#ifdef ONBOARDBUTTONS
-    uint8_t buttonState = ButtonsPoll(0, 0);
-    leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
-    rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
-#endif
-/*
-    if (!noFuel && jetButtonPressed) {
-        fuel--;             //using fuel
-        thrusterAccel = 2.5f;
-    } else {
-        thrusterAccel = 0.0;
-    }
- //   if (noFuel | !jetButtonPressed) {
- //       accel = 1.0;}
-    if (leftButtonPressed) {
-        angle--;
-    }
-    if (rightButtonPressed) {
-        angle++;
-    }*/
     if (angle <= 0) {
         angle = 0;
     }
@@ -323,13 +296,7 @@ void start_screen(void) {
 
 
 void buttonPushed(void) {
-    draw_string(3, 3, "PUSHED", WHITE);
-    uint32_t status = 0;
-
-    status = GPIOIntStatus(GPIO_PORTE_BASE, true);
-    GPIOIntClear(GPIO_PORTE_BASE, status);
-
-    if ((status & GPIO_INT_PIN_0) == GPIO_INT_PIN_0) {
+    if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 2)) {
         //Then there was a pin0 interrupt
         if (fuel != 0) {
             fuel--;             //using fuel
@@ -340,17 +307,17 @@ void buttonPushed(void) {
         }
     }
 
-    if ((status & GPIO_INT_PIN_1) == GPIO_INT_PIN_1) {
+    if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 0)) {
         //Then there was a pin1 interrupt
         angle--;
+        draw_string(3, 3, "PUSHED", WHITE);
     }
-    if ((status & GPIO_INT_PIN_2) == GPIO_INT_PIN_2) {
+
+    if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 1)) {
         //Then there was a pin2 interrupt
         angle++;
+        draw_string(3, 3, "PUSHED", WHITE);
     }
-
-    draw_string(3, 3, "PUSHED", WHITE);
-
 }
 
 void jetButtonPushed(void) {
