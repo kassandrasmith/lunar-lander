@@ -26,6 +26,7 @@
 
 #define FRAME_RATE 30
 #define SOUND_RATE 1
+#define BUTTON_RATE 10
 #define GRAVITY 1.5f
 //declare global variables
 uint16_t score = 0;
@@ -48,7 +49,6 @@ int startGame = 1;
 int playGame = 0;
 int16_t width;                      //width of lander
 int16_t height;                     //height of lander
-bool buttonPressed;
 int storeTerrainY[WIDTH];
 
 int main(void) {
@@ -61,9 +61,9 @@ int main(void) {
     screen_init();              //Initializes screen
     //Initialize interrupts
     FPULazyStackingEnable();
-    //   sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
+    sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
     game_loop_init(FRAME_RATE);   //Initializes Systick interrupt to handle game loop
-    button_Interrupt_Init(10);
+    button_Interrupt_Init(BUTTON_RATE);
     IntMasterEnable();          //end of initializations, enable interrupts
     start_screen();             // set screen to initial state
     // We need to stall here and wait for the interrupts to trigger at regular intervals.
@@ -84,7 +84,6 @@ void game_loop() {
         playGame = 1;
         startGame = 0;
         endGame = 0;
-        process_input();
         update();
         check();
         render();
@@ -95,32 +94,18 @@ void game_loop() {
         playGame = 0;
         endGame = 1;
         startGame = 0;
-        process_input();
         tick();
-        // ttime = 0;
-
     }
-    if (endGame && buttonPressed) {
+    if (endGame && buttonPushed()) {
         endGame = 0;
         playGame = 0;
         startGame = 1;
     }
-
     toggleLED(FRAME_RATE);      //Debugging heartbeat
 
 }
 
-bool jetButtonPressed;
-void process_input(void) {
-    if (angle <= 0) {
-        angle = 0;
-    }
-    if (angle >= 8) {
-        angle = 8;
-    }
-}
 //update location and time
-
 void update(void) {
     float ttime = .07;                  //TODO set to refresh rate
 
@@ -294,8 +279,7 @@ void start_screen(void) {
     draw_terrain();
 }
 
-
-void buttonPushed(void) {
+uint16_t buttonPushed(void) {
     if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 2)) {
         //Then there was a pin0 interrupt
         if (fuel != 0) {
@@ -305,35 +289,22 @@ void buttonPushed(void) {
         else {
             thrusterAccel = 0.0;
         }
+        return true;
     }
 
-    if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 0)) {
+    else if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 0)) {
         //Then there was a pin1 interrupt
         angle--;
-        draw_string(3, 3, "PUSHED", WHITE);
+        if (angle <= 0) { angle = 0; }
+        return true;
     }
 
-    if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 1)) {
+    else if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 1)) {
         //Then there was a pin2 interrupt
         angle++;
-        draw_string(3, 3, "PUSHED", WHITE);
+        if (angle >= 8) { angle = 8; }
+        return true;
     }
-}
 
-void jetButtonPushed(void) {
-    if (fuel != 0) {
-        fuel--;             //using fuel
-        thrusterAccel = 2.5f;
-    }
-    else {
-        thrusterAccel = 0.0;
-    }
-}
-
-void leftButtonPushed(void) {
-    angle--;
-}
-
-void rightButtonPushed(void) {
-    angle++;
+    else { return false; }
 }

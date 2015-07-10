@@ -20,12 +20,5 @@ void write(uint16_t score, uint16_t fuel, uint16_t seconds);
 void start_screen(void);
 bool detect_collision(void);
 
-void buttonPushed(void);
-
-void jetButtonPushed(void);
-
-void leftButtonPushed(void);
-
-void rightButtonPushed(void);
-
+uint16_t buttonPushed(void);
 #endif //LUNAR_LANDER_MAIN_H
