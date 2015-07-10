@@ -133,6 +133,15 @@ const uint16_t lander6Image[] = {
         BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 };
 
+const uint16_t landerDeathImage[] = {
+        BLACK, BLACK, WHITE, BLACK, WHITE, BLACK, BLACK, BLACK, WHITE,
+        BLACK, WHITE, WHITE, BLACK, BLACK, WHITE, WHITE, BLACK, WHITE,
+        BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, WHITE, BLACK, BLACK,
+        BLACK, WHITE, BLACK, WHITE, BLACK, WHITE, BLACK, BLACK, WHITE,
+        WHITE, BLACK, WHITE, BLACK, BLACK, WHITE, BLACK, WHITE, WHITE,
+        WHITE, WHITE, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, WHITE, BLACK, BLACK, WHITE, WHITE, BLACK, WHITE,
+};
 
 
 const uint16_t black[] = {
@@ -212,8 +221,11 @@ sprite lander5 = {.width = 8, .height = 9, .xoffset = 1, .yoffset = -1, .data = 
 sprite lander6 = {.width = 9, .height = 9, .xoffset = 1, .yoffset = -1, .data = lander6Image};
 sprite lander7 = {.width = 8, .height = 8, .xoffset = 1, .yoffset = -1, .data = lander7Image};
 sprite lander8 = {.width = 9, .height = 7, .xoffset = 1, .yoffset = -1, .data = lander8Image};
-
+sprite death = {.width = 9, .height = 7, .xoffset = 0, .yoffset = 0, .data = landerDeathImage};
 
 sprite *landerSprite[9] = {&lander8, &lander7, &lander6, &lander5, &lander4, &lander3,
                            &lander2, &lander1, &lander0};
+sprite *deathSprite[1] = {&death};
+
 #endif //LUNAR_LANDER_IMAGES_H
+

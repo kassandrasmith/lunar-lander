@@ -259,7 +259,7 @@ bool detect_collision(void) {
     int newterrainy;
     for (int i = (int) xposit; i < xposit + 8; i++) {
         newterrainy = storeTerrainY[i];
-        if (yposit + height >= newterrainy) {
+        if (newterrainy <= yposit - 2) {
             return true;
         }
     }
@@ -286,9 +286,6 @@ uint16_t buttonPushed(void) {
             fuel--;             //using fuel
             thrusterAccel = 2.5f;
         }
-        else {
-            thrusterAccel = 0.0;
-        }
         return true;
     }
 
@@ -306,5 +303,8 @@ uint16_t buttonPushed(void) {
         return true;
     }
 
-    else { return false; }
+    else {
+        thrusterAccel = 0.0;
+        return false;
+    }
 }
