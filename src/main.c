@@ -94,6 +94,7 @@ void game_loop() {
         playGame = 0;
         endGame = 1;
         startGame = 0;
+        draw_terrain_chunk();
         tick();
     }
     if (endGame && buttonPushed()) {
@@ -259,7 +260,7 @@ bool detect_collision(void) {
     int newterrainy;
     for (int i = (int) xposit; i < xposit + 8; i++) {
         newterrainy = storeTerrainY[i];
-        if (newterrainy <= yposit - 2) {
+        if (newterrainy <= yposit - 1) {
             return true;
         }
     }
@@ -306,5 +307,11 @@ uint16_t buttonPushed(void) {
     else {
         thrusterAccel = 0.0;
         return false;
+    }
+}
+
+void draw_terrain_chunk(void) {
+    for (float i = xposit; i < xposit + 9; i++) {
+        draw_pixel((int) i, (int) yposit - 2, WHITE);
     }
 }
