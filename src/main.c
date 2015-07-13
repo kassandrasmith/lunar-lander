@@ -1,6 +1,5 @@
 //TODO add music
 //TODO terrain generator
-//TODO clear velocity at the end of each play
 //TODO draw thrust
 #include <stdio.h>
 #include <stdint.h>
@@ -311,7 +310,9 @@ uint16_t buttonPushed(void) {
 }
 
 void draw_terrain_chunk(void) {
-    for (float i = xposit; i < xposit + 9; i++) {
-        draw_pixel((int) i, (int) yposit - 2, WHITE);
+    for (int i = (int) xposit; i < xposit + 9; i++) {
+        int16_t terrainy = 140; //FIXME reminder that there is another place the terrain generator needs to be
+        storeTerrainY[i] = terrainy;
+        draw_pixel(i, terrainy, WHITE);
     }
 }

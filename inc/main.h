@@ -21,4 +21,6 @@ void start_screen(void);
 bool detect_collision(void);
 
 uint16_t buttonPushed(void);
+
+void draw_terrain_chunk(void);
 #endif //LUNAR_LANDER_MAIN_H
