@@ -15,6 +15,18 @@ const uint16_t test_image[] = {
 };
 
 const uint16_t lander4Image[] = {
+        BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, WHITE, WHITE, BLACK, BLACK, BLACK,
+        BLACK, WHITE, WHITE, BLACK, BLACK, BLACK, WHITE, BLACK, WHITE, WHITE, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK,
+        WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE,
+        BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, WHITE,
+        WHITE, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK,
+        BLACK, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, WHITE, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK,
+        BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK,
+        BLACK, WHITE, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        BLACK, BLACK,
+};
+
+const uint16_t oldlander4Image[] = {
         BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
         BLACK, WHITE, BLACK, BLACK, BLACK, WHITE, BLACK,
         BLACK, BLACK, WHITE, BLACK, WHITE, BLACK, BLACK,
@@ -207,7 +219,7 @@ sprite lander0 = {.width = 9, .height = 7, .xoffset = -1, .yoffset = -1, .data =
 sprite lander1 = {.width = 8, .height = 8, .xoffset = -1, .yoffset = -1, .data = lander1Image};
 sprite lander2 = {.width = 9, .height = 9, .xoffset = -1, .yoffset = -1, .data = lander2Image};
 sprite lander3 = {.width = 8, .height = 9, .xoffset = -1, .yoffset = -1, .data = lander3Image};
-sprite lander4 = {.width = 7, .height = 8, .xoffset = 0, .yoffset = -1, .data = lander4Image};
+sprite lander4 = {.width = 13, .height = 10, .xoffset = 0, .yoffset = -1, .data = lander4Image};
 sprite lander5 = {.width = 8, .height = 9, .xoffset = 1, .yoffset = -1, .data = lander5Image};
 sprite lander6 = {.width = 9, .height = 9, .xoffset = 1, .yoffset = -1, .data = lander6Image};
 sprite lander7 = {.width = 8, .height = 8, .xoffset = 1, .yoffset = -1, .data = lander7Image};
