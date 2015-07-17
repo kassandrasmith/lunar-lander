@@ -156,7 +156,12 @@ void check(void) {
 void render(void) {
     int16_t xoffset;                    //offset of lander
     int16_t yoffset;
+    int16_t thrustXOffset;                    //offset of lander
+    int16_t thrustYOffset;
+    int16_t thrustWidth;
+    int16_t thrustHeight;
     sprite sprite = *landerSprite[angle];
+    sprite thrust = *thrustSprite[angle];
     write(score, fuel, seconds);
 
     if (time % FRAME_RATE == 0) {
@@ -173,10 +178,20 @@ void render(void) {
     yoffset = sprite.yoffset;
     const uint16_t *data = sprite.data;
 
+    thrustWidth = sprite.width;
+    thrustHeight = sprite.height;
+    thrustXOffset = sprite.xoffset;
+    thrustYOffset = sprite.yoffset;
+    const uint16_t *thrustData = sprite.data;
+
     //Draw the lander
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
     draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height), black,
                 13, 5);
+    if (buttonPushed()) {
+        draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), thrustData, thrustWidth,
+                    thrustHeight);
+    }
 
 
     //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);

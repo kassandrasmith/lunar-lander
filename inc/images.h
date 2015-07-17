@@ -345,6 +345,7 @@ sprite thrust0 = {.width = 4, .height = 6, .xoffset = -13, .yoffset = -5, .data 
 
 sprite *landerSprite[9] = {&lander8, &lander7, &lander6, &lander5, &lander4, &lander3,
                            &lander2, &lander1, &lander0};
+
 sprite *thrustSprite[9] = {&thrust0, &thrust0, &thrust0, &thrust0, &thrust0, &thrust0,
                            &thrust0, &thrust0, &thrust0,};
 
