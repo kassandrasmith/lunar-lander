@@ -342,12 +342,21 @@ sprite lander7 = {.width = 14, .height = 12, .xoffset = 1, .yoffset = -1, .data 
 sprite lander8 = {.width = 13, .height = 10, .xoffset = 1, .yoffset = -1, .data = lander8Image};
 
 sprite thrust0 = {.width = 4, .height = 6, .xoffset = -13, .yoffset = -5, .data = lander0Thrust};
+sprite thrust1 = {.width = 5, .height = 7, .xoffset = -13, .yoffset = -5, .data = lander1Thrust};
+sprite thrust2 = {.width = 5, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander2Thrust};
+sprite thrust3 = {.width = 6, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander3Thrust};
+sprite thrust4 = {.width = 6, .height = 4, .xoffset = -13, .yoffset = -5, .data = lander4Thrust};
+sprite thrust5 = {.width = 6, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander5Thrust};
+sprite thrust6 = {.width = 5, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander6Thrust};
+sprite thrust7 = {.width = 5, .height = 7, .xoffset = -13, .yoffset = -5, .data = lander7Thrust};
+sprite thrust8 = {.width = 4, .height = 6, .xoffset = -13, .yoffset = -5, .data = lander8Thrust};
+
 
 sprite *landerSprite[9] = {&lander8, &lander7, &lander6, &lander5, &lander4, &lander3,
                            &lander2, &lander1, &lander0};
 
-sprite *thrustSprite[9] = {&thrust0, &thrust0, &thrust0, &thrust0, &thrust0, &thrust0,
-                           &thrust0, &thrust0, &thrust0,};
+sprite *thrustSprite[9] = {&thrust8, &thrust7, &thrust6, &thrust5, &thrust4, &thrust3,
+                           &thrust2, &thrust1, &thrust0,};
 
 
 #endif //LUNAR_LANDER_IMAGES_H

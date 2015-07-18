@@ -188,7 +188,7 @@ void render(void) {
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
     draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height), black,
                 13, 5);
-    if (buttonPushed()) {
+    if (buttonPushed) {
         draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), thrustData, thrustWidth,
                     thrustHeight);
     }
