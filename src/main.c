@@ -161,7 +161,7 @@ void render(void) {
     int16_t thrustWidth;
     int16_t thrustHeight;
     sprite sprite = *landerSprite[angle];
-    sprite thrust = *thrustSprite[angle];
+    thrust thrust = *thrustSprite[angle];
     write(score, fuel, seconds);
 
     if (time % FRAME_RATE == 0) {
@@ -178,24 +178,31 @@ void render(void) {
     yoffset = sprite.yoffset;
     const uint16_t *data = sprite.data;
 
-    thrustWidth = sprite.width;
-    thrustHeight = sprite.height;
-    thrustXOffset = sprite.xoffset;
-    thrustYOffset = sprite.yoffset;
-    const uint16_t *thrustData = sprite.data;
+    thrustWidth = thrust.width;
+    thrustHeight = thrust.height;
+    thrustXOffset = thrust.xoffset;
+    thrustYOffset = thrust.yoffset;
+    const uint16_t *thrustData = thrust.data;
 
     //Draw the lander
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
-    draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height), black,
-                13, 5);
-    if (buttonPushed) {
+
+    draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height - 2),
+                blue,
+                26, 5);
+    if (thrusterAccel == 2.5f) {
         draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), thrustData, thrustWidth,
+                    thrustHeight);
+    }
+    else {
+        draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), black,
+                    thrustWidth,
                     thrustHeight);
     }
 
 
-    //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , black, 2, 10);
-    //   draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + height) , black, 2, 10);
+    //  draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit) , blue, 2, 10);
+    //   draw_bitmap((int16_t) ((xposit + xoffset) + width), (int16_t) (oldyposit + 6 + height) , blue, 2, 10);
     //   draw_bitmap((int16_t) (xposit - 2 + xoffset), (int16_t) (oldyposit + 6 +  height) , black, 2, 10);
     // draw_bitmap(oldxposit - 5, oldyposit - 9, blue, 13, 5);
 
