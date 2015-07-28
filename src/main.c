@@ -188,7 +188,7 @@ void render(void) {
     draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
 
     draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height - 2),
-                blue,
+                black,
                 26, 5);
     if (thrusterAccel == 2.5f) {
         draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), thrustData, thrustWidth,
