@@ -197,7 +197,7 @@ void render(void) {
     else {
         draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), black,
                     thrustWidth,
-                    thrustHeight);
+                    (int16_t) (thrustHeight - 2));
     }
 
 

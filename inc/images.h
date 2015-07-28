@@ -352,7 +352,8 @@ thrust thrust0 = {.width = 4, .height = 6, .xoffset = -13, .yoffset = -5, .data 
 thrust thrust1 = {.width = 5, .height = 7, .xoffset = -13, .yoffset = -5, .data = lander7Thrust};
 thrust thrust2 = {.width = 5, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander6Thrust};
 thrust thrust3 = {.width = 6, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander5Thrust};
-thrust thrust4 = {.width = 6, .height = 4, .xoffset = -13, .yoffset = -5, .data = lander4Thrust};
+
+thrust thrust4 = {.width = 6, .height = 4, .xoffset = 2, .yoffset = 0, .data = lander4Thrust};
 thrust thrust5 = {.width = 6, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander3Thrust};
 thrust thrust6 = {.width = 5, .height = 5, .xoffset = -13, .yoffset = -5, .data = lander2Thrust};
 thrust thrust7 = {.width = 5, .height = 7, .xoffset = -13, .yoffset = -5, .data = lander1Thrust};
