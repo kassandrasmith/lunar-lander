@@ -1,17 +1,17 @@
-// Implementation of a LCG
-// https://en.wikipedia.org/wiki/Linear_congruential_generator
+#include <stdio.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+/* always assuming int is at least 32 bits */
+int rseed = 0;
 
-const uint32_t LCGmultiplier = ~0;
-const uint32_t increment = 0;
-const uint32_t m = 0;
-
-bool random(){
-    return true;
+inline void srand(int x)
+{
+    rseed = x;
 }
-
-uint8_t randomByte(){
-    return 0;
+ 
+#define RAND_MAX_32 ((1U << 31) - 1)
+#define RAND_MAX ((1U << 15) - 1)
+ 
+inline int rand()
+{
+	return (rseed = (rseed * 214013 + 2531011) & RAND_MAX_32) >> 16;
 }

@@ -5,6 +5,6 @@
 #define LUNAR_LANDER_RANDOM_H
 
 bool random();
-uint8_t randomByte();
+int rand();
 
 #endif //LUNAR_LANDER_RANDOM_H

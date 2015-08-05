@@ -1,6 +1,3 @@
-//TODO add music
-//TODO terrain generator
-//TODO draw thrust
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -14,41 +11,45 @@
 #include "../inc/initialization.h"
 #include "../inc/main.h"
 #include "../inc/images.h"
+#include "../inc/random.h"
 #include "driverlib/systick.h"
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
-//unused for now TODO delete them at the end
-#include "../inc/sound.h"
-//#include "driverlib/sysctl.h"
-//#include "driverlib/gpio.h"
-//#include "driverlib/timer.h"
+#include "../inc/game_state.h"
+
 
 #define FRAME_RATE 30
 #define SOUND_RATE 1
 #define BUTTON_RATE 10
 #define GRAVITY 1.5f
+
+
 //declare global variables
-uint16_t score = 0;
-uint16_t time = 0;
+GameState state = {.fuel = 3000,
+                      .score = 0,
+                      .time = 0,
+                      .xaccel = 0,
+                      .yaccel = 0,
+                      .yposit = 9,           //initialize to topmost of landscape-oriented screen
+                      .xposit = 64,                  //initialize to middle of landscape-oriented screen
+                      .xvelocity = 0,
+                      .yvelocity = 0,
+                      .heading = SOUTH};
 uint16_t seconds = 0;
-uint16_t fuel = 3000;
+
 char multiplier = 0;                //To be used to increase score according to where the lander lands
-float yposit = 9;                   //initialize to topmost of landscape-oriented screen
-float xposit = 64;                  //initialize to middle of landscape-oriented screen
+
 float oldxposit = 64;               //position where the lander was previously, to clear
 float oldyposit = 5;                //position where the lander was previously, to clear
-float yvelocity;                    //can be negative if vertical position is increasing
-float xvelocity;                    //negative value moves left, positive moves right
-float xaccel;                       //acceleration in the x direction
-float yaccel;                       //acceleration in the x direction
+
 float thrusterAccel;                //acceleration when the thrusters are enabled
-int16_t angle = 4;                  //4 points upwards, 0 leftwards, and 8 rightwards
+
 int endGame = 0;                    //initialize game states
 int startGame = 1;
 int playGame = 0;
 int16_t width;                      //width of lander
 int16_t height;                     //height of lander
-int storeTerrainY[WIDTH];
+uint16_t terrain[WIDTH];
 
 int main(void) {
     //Initializations board connections
@@ -63,6 +64,8 @@ int main(void) {
     sound_init(SOUND_RATE);               //Initializes interrupt (Timer 2A) used for sounds
     game_loop_init(FRAME_RATE);   //Initializes Systick interrupt to handle game loop
     button_Interrupt_Init(BUTTON_RATE);
+
+    generate_terrain((uint16_t *)&terrain, (uint16_t)WIDTH);
     IntMasterEnable();          //end of initializations, enable interrupts
     start_screen();             // set screen to initial state
     // We need to stall here and wait for the interrupts to trigger at regular intervals.
@@ -109,20 +112,20 @@ void game_loop() {
 void update(void) {
     float ttime = .07;                  //TODO set to refresh rate
 
-    time++;
+    state.time++;
 
-    yaccel = sinAngle(angle) * (-thrusterAccel) + GRAVITY;
-    xaccel = cosAngle(angle) * thrusterAccel;
+    state.yaccel = sinAngle(state.heading) * (-thrusterAccel) + GRAVITY;
+    state.xaccel = cosAngle(state.heading) * thrusterAccel;
 
-    yvelocity += yaccel * ttime;
-    xvelocity += xaccel * ttime;
+    state.yvelocity += state.yaccel * ttime;
+    state.xvelocity += state.xaccel * ttime;
 
-    yposit += yvelocity * ttime;
-    xposit += xvelocity * -ttime;
+    state.yposit += state.yvelocity * ttime;
+    state.xposit += state.xvelocity * -ttime;
 
 
-    oldxposit = xposit;
-    oldyposit += yposit + yvelocity * ttime;
+    oldxposit = state.xposit;
+    oldyposit += state.yposit + state.yvelocity * ttime;
 
 
 }
@@ -131,8 +134,8 @@ void check(void) {
     //declare boolean
     bool outOfTime = seconds >= 240;
     bool collided = detect_collision();
-    bool tooFast = yvelocity >= 2.0;
-    bool crashed = collided && ((angle != 4) || tooFast);
+    bool tooFast = state.yvelocity >= 2.0;
+    bool crashed = collided && ((state.heading != SOUTH) || tooFast);
 
     //check yposit
     if (crashed) {
@@ -145,11 +148,11 @@ void check(void) {
     if (outOfTime) {
         die(OUTOFTIME);
     }
-    if (xposit >= 128) {
-        xposit = 0;
+    if (state.xposit >= 128) {
+        state.xposit = 0;
     }
-    if (xposit <= 0) {
-        xposit = 128;
+    if (state.xposit <= 0) {
+        state.xposit = 128;
     }
 }
 
@@ -160,17 +163,17 @@ void render(void) {
     int16_t thrustYOffset;
     int16_t thrustWidth;
     int16_t thrustHeight;
-    sprite sprite = *landerSprite[angle];
-    thrust thrust = *thrustSprite[angle];
-    write(score, fuel, seconds);
+    sprite sprite = *landerSprite[state.heading];
+    thrust thrust = *thrustSprite[state.heading];
+    write(state.score, state.fuel, seconds);
 
-    if (time % FRAME_RATE == 0) {
+    if (state.time % FRAME_RATE == 0) {
         //write_time(seconds);
         seconds++;
     }
 
-    write_velocities(xvelocity, yvelocity);
-    write_angle(angle);
+    write_velocities(state.xvelocity, state.yvelocity);
+    write_angle(state.heading);
 
     width = sprite.width;
     height = sprite.height;
@@ -185,17 +188,17 @@ void render(void) {
     const uint16_t *thrustData = thrust.data;
 
     //Draw the lander
-    draw_bitmap((int16_t) (xposit + xoffset), (int16_t) (yposit + yoffset) , data, width, height);
+    draw_bitmap((int16_t) (state.xposit + xoffset), (int16_t) (state.yposit + yoffset) , data, width, height);
 
-    draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - yposit) - height - 2),
+    draw_bitmap((int16_t) (oldxposit), (int16_t) (oldyposit - (oldyposit - state.yposit) - height - 2),
                 black,
                 26, 5);
     if (thrusterAccel == 2.5f) {
-        draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), thrustData, thrustWidth,
+        draw_bitmap((int16_t) (state.xposit + thrustXOffset), (int16_t) (state.yposit + thrustYOffset), thrustData, thrustWidth,
                     thrustHeight);
     }
     else {
-        draw_bitmap((int16_t) (xposit + thrustXOffset), (int16_t) (yposit + thrustYOffset), black,
+        draw_bitmap((int16_t) (state.xposit + thrustXOffset), (int16_t) (state.yposit + thrustYOffset), black,
                     thrustWidth,
                     (int16_t) (thrustHeight - 2));
     }
@@ -217,9 +220,9 @@ void die(DeathType_t deathtype) {
     switch (deathtype) {
         case CRASHED:
             draw_string(1, 7, "Lost 20 fuel units.", (int16_t) WHITE);
-            fuel -= 20;
+            state.fuel -= 20;
             draw_string(3, 8, "Fuel left:", (int16_t) WHITE);
-            draw_dec(14, 8, fuel);
+            draw_dec(14, 8, state.fuel);
             //draw_string(4, 8, "Current score:", (int16_t)WHITE);
             //write_score(score);
             break;
@@ -238,9 +241,9 @@ void land(void) {
     playGame = 0;
     oldxposit = 0;
     draw_string(6, 6, "You landed!", (int16_t) WHITE);
-    if (fuel > 0) {
+    if (state.fuel > 0) {
         draw_string(6, 7, "Fuel left:", (int16_t) WHITE);
-        draw_dec(6, 8, fuel);
+        draw_dec(6, 8, state.fuel);
     }
 
 }
@@ -271,17 +274,15 @@ void write(uint16_t score, uint16_t fuel, uint16_t seconds) {
 void draw_terrain(void) {
 
     for (uint16_t i = 0; i < WIDTH; i++) {
-        int16_t terrainy = 140;     //TODO Random number generator (+1, +0, -1)
-        storeTerrainY[i] = terrainy;
-        draw_pixel(i, terrainy, WHITE);
+        draw_pixel(i, terrain[i], WHITE);
     }
 }
 
 bool detect_collision(void) {
     int newterrainy;
-    for (int i = (int) xposit; i < xposit + 8; i++) {
-        newterrainy = storeTerrainY[i];
-        if (newterrainy <= yposit - 1) {
+    for (int i = (int) state.xposit; i < state.xposit + 8; i++) {
+        newterrainy = terrain[i];
+        if (newterrainy <= state.yposit - 1) {
             return true;
         }
     }
@@ -289,14 +290,14 @@ bool detect_collision(void) {
 }
 
 void start_screen(void) {
-    xposit = 64;
-    yposit = 9;
+    state.xposit = 64;
+    state.yposit = 9;
     oldxposit = 64;
     oldyposit = 5;
-    xvelocity = 0;
-    yvelocity = 0;
-    xaccel = 0;
-    yaccel = 0;
+    state.xvelocity = 0;
+    state.yvelocity = 0;
+    state.xaccel = 0;
+    state.yaccel = 0;
     fill_background(BLACK);
     draw_terrain();
 }
@@ -304,8 +305,8 @@ void start_screen(void) {
 uint16_t buttonPushed(void) {
     if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 2)) {
         //Then there was a pin0 interrupt
-        if (fuel != 0) {
-            fuel--;             //using fuel
+        if (state.fuel != 0) {
+            state.fuel--;             //using fuel
             thrusterAccel = 2.5f;
         }
         return true;
@@ -313,15 +314,15 @@ uint16_t buttonPushed(void) {
 
     else if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 0)) {
         //Then there was a pin1 interrupt
-        angle--;
-        if (angle <= 0) { angle = 0; }
+        state.heading--;
+        if (state.heading <= WEST) { state.heading = WEST; }
         return true;
     }
 
     else if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 1)) {
         //Then there was a pin2 interrupt
-        angle++;
-        if (angle >= 8) { angle = 8; }
+        state.heading++;
+        if (state.heading >= EAST) { state.heading = EAST; }
         return true;
     }
 
@@ -332,9 +333,36 @@ uint16_t buttonPushed(void) {
 }
 
 void draw_terrain_chunk(void) {
-    for (int i = (int) xposit; i < xposit + 9; i++) {
-        int16_t terrainy = 140; //FIXME reminder that there is another place the terrain generator needs to be
-        storeTerrainY[i] = terrainy;
-        draw_pixel(i, terrainy, WHITE);
+    for (uint16_t i = state.xposit; i < state.xposit + 9; i++) {
+        draw_pixel(i, terrain[i], WHITE);
     }
+}
+
+void generate_terrain(uint16_t *container, uint16_t size){
+    // The number of terrain features
+    uint8_t features = rand() % 6 + 4;
+    int feature_type[10];
+    for (int i = 0; i < features; i++){
+        feature_type[i] = (rand() % 5) - 3;
+        //Verify that there's at least one flat area
+    }
+
+    int terrain_cursor = 0;
+    uint16_t terrain_level = 120;
+    for (int i = 0; i < features; i++) {
+        const int incline = feature_type[i];
+        const uint16_t length = rand() % 30 + 15;
+        // Ensure that the minimum length is enough space for the lander to land
+        for (int j = 0; j < length; j++) {
+            if (terrain_cursor > size){
+                goto done;
+            }
+            terrain_level += incline;
+            container[terrain_cursor] = terrain_level;
+            terrain_cursor++;
+        }
+    }
+    done:
+    return;
+
 }

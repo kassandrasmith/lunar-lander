@@ -14,6 +14,7 @@ void check(void);
 void render(void);
 void die(DeathType_t);
 void land(void);
+void generate_terrain(uint16_t* container, uint16_t size);
 void draw_terrain(void);
 
 void write(uint16_t score, uint16_t fuel, uint16_t seconds);
