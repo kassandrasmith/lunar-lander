@@ -27,4 +27,11 @@ typedef struct GameState {
     lander_heading heading;
 } GameState;
 
+typedef enum screen {
+    GAMEPLAY,
+    START,
+    DEATH,
+    ENDGAME
+} screen;
+
 #endif //LUNAR_LANDER_GAME_STATE_H

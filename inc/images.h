@@ -359,11 +359,11 @@ thrust thrust6 = {.width = 5, .height = 5, .xoffset = -13, .yoffset = -5, .data 
 thrust thrust7 = {.width = 5, .height = 7, .xoffset = -13, .yoffset = -5, .data = lander1Thrust};
 thrust thrust8 = {.width = 4, .height = 6, .xoffset = -13, .yoffset = -5, .data = lander0Thrust};
 
-sprite *landerSprite[9] = {&lander8, &lander7, &lander6, &lander5, &lander4, &lander3,
-                           &lander2, &lander1, &lander0};
+sprite *landerSprite[9] = {&lander0, &lander1, &lander2, &lander3, &lander4, &lander5,
+                           &lander6, &lander7, &lander8};
 
-thrust *thrustSprite[9] = {&thrust8, &thrust7, &thrust6, &thrust5, &thrust4, &thrust3,
-                           &thrust2, &thrust1, &thrust0};
+thrust *thrustSprite[9] = {&thrust0, &thrust1, &thrust2, &thrust3, &thrust4, &thrust5,
+                           &thrust6, &thrust7, &thrust8};
 
 
 //sprite *deathSprite[1] = {&death};

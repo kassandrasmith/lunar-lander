@@ -1,8 +1,5 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <sys/types.h>
-#include "inc/tm4c123gh6pm.h"
 #include <inc/hw_memmap.h>
 #include "../inc/debugging_utilities.h"
 #include "../inc/computations.h"
@@ -12,7 +9,6 @@
 #include "../inc/main.h"
 #include "../inc/images.h"
 #include "../inc/random.h"
-#include "driverlib/systick.h"
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
 #include "../inc/game_state.h"
@@ -22,7 +18,7 @@
 #define SOUND_RATE 1
 #define BUTTON_RATE 10
 #define GRAVITY 1.5f
-
+//#define DEBUG
 
 //declare global variables
 GameState state = {.fuel = 3000,
@@ -36,7 +32,7 @@ GameState state = {.fuel = 3000,
                       .yvelocity = 0,
                       .heading = SOUTH};
 uint16_t seconds = 0;
-
+screen currentScreen = START;
 char multiplier = 0;                //To be used to increase score according to where the lander lands
 
 float oldxposit = 64;               //position where the lander was previously, to clear
@@ -44,9 +40,6 @@ float oldyposit = 5;                //position where the lander was previously, 
 
 float thrusterAccel;                //acceleration when the thrusters are enabled
 
-int endGame = 0;                    //initialize game states
-int startGame = 1;
-int playGame = 0;
 int16_t width;                      //width of lander
 int16_t height;                     //height of lander
 uint16_t terrain[WIDTH];
@@ -67,7 +60,6 @@ int main(void) {
 
     generate_terrain((uint16_t *)&terrain, (uint16_t)WIDTH);
     IntMasterEnable();          //end of initializations, enable interrupts
-    start_screen();             // set screen to initial state
     // We need to stall here and wait for the interrupts to trigger at regular intervals.
     while(true);
 }
@@ -75,35 +67,29 @@ int main(void) {
 
 void game_loop() {
 
-    if (startGame) {
-        startGame = 0;
-        playGame = 1;
-        endGame = 0;
-        start_screen();
-        check();
+    switch (currentScreen) {
+        case START:
+            fill_background(BLACK);
+            draw_terrain();
+            reset_lander_attributes(&state);
+            check();
+            currentScreen = GAMEPLAY;
+            break;
+        case GAMEPLAY:
+            update();
+            check();
+            render();
+            tick();
+            break;
+        case DEATH:
+            draw_terrain_chunk();
+            tick();
+            if (button_pushed()) {
+                currentScreen = START;
+            }
+            break;
     }
-    else if (playGame) {
-        playGame = 1;
-        startGame = 0;
-        endGame = 0;
-        update();
-        check();
-        render();
-        tick();
 
-    }
-    else if (endGame) {
-        playGame = 0;
-        endGame = 1;
-        startGame = 0;
-        draw_terrain_chunk();
-        tick();
-    }
-    if (endGame && buttonPushed()) {
-        endGame = 0;
-        playGame = 0;
-        startGame = 1;
-    }
     toggleLED(FRAME_RATE);      //Debugging heartbeat
 
 }
@@ -122,7 +108,6 @@ void update(void) {
 
     state.yposit += state.yvelocity * ttime;
     state.xposit += state.xvelocity * -ttime;
-
 
     oldxposit = state.xposit;
     oldyposit += state.yposit + state.yvelocity * ttime;
@@ -168,12 +153,11 @@ void render(void) {
     write(state.score, state.fuel, seconds);
 
     if (state.time % FRAME_RATE == 0) {
-        //write_time(seconds);
         seconds++;
     }
 
     write_velocities(state.xvelocity, state.yvelocity);
-    write_angle(state.heading);
+    write_angle((uint16_t)state.heading);
 
     width = sprite.width;
     height = sprite.height;
@@ -214,8 +198,7 @@ void render(void) {
 //Output some sort of death message
 void die(DeathType_t deathtype) {
     //fill_background(BLACK);
-    endGame = 1;
-    playGame = 0;
+    currentScreen = DEATH;
     draw_string(6, 6, "You died!", (int16_t) WHITE);
     switch (deathtype) {
         case CRASHED:
@@ -237,8 +220,7 @@ void die(DeathType_t deathtype) {
 
 void land(void) {
     // fill_background(BLACK);
-    endGame = 1;
-    playGame = 0;
+    currentScreen = DEATH;
     oldxposit = 0;
     draw_string(6, 6, "You landed!", (int16_t) WHITE);
     if (state.fuel > 0) {
@@ -272,38 +254,43 @@ void write(uint16_t score, uint16_t fuel, uint16_t seconds) {
 }
 
 void draw_terrain(void) {
-
     for (uint16_t i = 0; i < WIDTH; i++) {
         draw_pixel(i, terrain[i], WHITE);
     }
 }
 
 bool detect_collision(void) {
-    int newterrainy;
     for (int i = (int) state.xposit; i < state.xposit + 8; i++) {
-        newterrainy = terrain[i];
-        if (newterrainy <= state.yposit - 1) {
+        if (terrain[i] <= state.yposit - 1) {
             return true;
         }
     }
     return false;
 }
 
-void start_screen(void) {
-    state.xposit = 64;
-    state.yposit = 9;
+void reset_lander_attributes(GameState *state) {
+    state->xposit = 64;
+    state->yposit = 9;
     oldxposit = 64;
     oldyposit = 5;
-    state.xvelocity = 0;
-    state.yvelocity = 0;
-    state.xaccel = 0;
-    state.yaccel = 0;
-    fill_background(BLACK);
-    draw_terrain();
+    state->xvelocity = 0;
+    state->yvelocity = 0;
+    state->xaccel = 0;
+    state->yaccel = 0;
+
 }
 
-uint16_t buttonPushed(void) {
-    if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 2)) {
+uint16_t button_pushed(void) {
+    bool leftButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 0);
+    bool rightButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 1);
+    bool centerButtonPressed = GPIOPinRead(GPIO_PORTE_BASE, 1 << 2);
+
+    #ifdef ONBOARDBUTTONS
+        uint8_t buttonState = ButtonsPoll(0, 0);
+        leftButtonPressed = (buttonState & ALL_BUTTONS) == LEFT_BUTTON;
+        rightButtonPressed = (buttonState & ALL_BUTTONS) == RIGHT_BUTTON;
+    #endif
+    if (centerButtonPressed) {
         //Then there was a pin0 interrupt
         if (state.fuel != 0) {
             state.fuel--;             //using fuel
@@ -312,14 +299,14 @@ uint16_t buttonPushed(void) {
         return true;
     }
 
-    else if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 0)) {
+    else if (leftButtonPressed) {
         //Then there was a pin1 interrupt
         state.heading--;
         if (state.heading <= WEST) { state.heading = WEST; }
         return true;
     }
 
-    else if (GPIOPinRead(GPIO_PORTE_BASE, 1 << 1)) {
+    else if (rightButtonPressed) {
         //Then there was a pin2 interrupt
         state.heading++;
         if (state.heading >= EAST) { state.heading = EAST; }
@@ -336,33 +323,4 @@ void draw_terrain_chunk(void) {
     for (uint16_t i = state.xposit; i < state.xposit + 9; i++) {
         draw_pixel(i, terrain[i], WHITE);
     }
-}
-
-void generate_terrain(uint16_t *container, uint16_t size){
-    // The number of terrain features
-    uint8_t features = rand() % 6 + 4;
-    int feature_type[10];
-    for (int i = 0; i < features; i++){
-        feature_type[i] = (rand() % 5) - 3;
-        //Verify that there's at least one flat area
-    }
-
-    int terrain_cursor = 0;
-    uint16_t terrain_level = 120;
-    for (int i = 0; i < features; i++) {
-        const int incline = feature_type[i];
-        const uint16_t length = rand() % 30 + 15;
-        // Ensure that the minimum length is enough space for the lander to land
-        for (int j = 0; j < length; j++) {
-            if (terrain_cursor > size){
-                goto done;
-            }
-            terrain_level += incline;
-            container[terrain_cursor] = terrain_level;
-            terrain_cursor++;
-        }
-    }
-    done:
-    return;
-
 }
